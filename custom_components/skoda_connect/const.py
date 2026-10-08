@@ -13,6 +13,8 @@ CONF_API_KEY: Final = "api_key"
 CONF_VINS: Final = "vins"
 CONF_READ_ONLY: Final = "read_only"
 CONF_CHARGING_SCAN_INTERVAL: Final = "charging_scan_interval"
+# Also use the charging interval while the charging cable is plugged in (not only while charging).
+CONF_PLUGGED_IN_FAST_POLLING: Final = "plugged_in_fast_polling"
 # Per-vehicle overrides in the entry options: {vin: {"idle": minutes, "charging": minutes}}
 CONF_VEHICLE_INTERVALS: Final = "vehicle_intervals"
 

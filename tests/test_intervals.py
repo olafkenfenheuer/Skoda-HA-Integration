@@ -162,3 +162,41 @@ async def test_rate_limit_backs_off(hass: HomeAssistant) -> None:
         assert c._rate_limit_backoff(SkodaRateLimitError("x", retry_after=timedelta(hours=5))) == timedelta(hours=1)
     finally:
         p.stop()
+
+
+async def test_plugged_in_uses_charging_interval_only_when_enabled(hass: HomeAssistant) -> None:
+    from custom_components.skoda_connect.api import SkodaVehicle
+
+    def _plugged(plug):
+        status = {"state": "READY_FOR_CHARGING"}
+        if plug is not None:
+            status["plugConnectionState"] = plug
+        return SkodaVehicle(VIN, {"name": "Car", "charging": {"status": status}})
+
+    entry = _entry()
+    mock, p = await _setup(hass, entry, {VIN: False})
+    try:
+        c = entry.runtime_data
+        c.data.vehicles[VIN] = _plugged("CONNECTED")
+        assert not c.uses_charging_interval(VIN)  # option off by default
+
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, "plugged_in_fast_polling": True}
+        )
+        await hass.async_block_till_done()
+        c = entry.runtime_data
+        c.data.vehicles[VIN] = _plugged("CONNECTED")
+        assert c.uses_charging_interval(VIN)
+        c.reschedule()
+        assert c.update_interval == timedelta(minutes=5)
+
+        c.data.vehicles[VIN] = _plugged("DISCONNECTED")
+        assert not c.uses_charging_interval(VIN)
+        c.data.vehicles[VIN] = _plugged(None)  # no plug field: state != CONNECT_CABLE -> plugged
+        assert c.uses_charging_interval(VIN)
+        c.data.vehicles[VIN] = SkodaVehicle(
+            VIN, {"charging": {"status": {"state": "CONNECT_CABLE"}}}
+        )
+        assert not c.uses_charging_interval(VIN)
+    finally:
+        p.stop()

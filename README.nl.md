@@ -78,7 +78,7 @@ Ook deze documentatie is beschikbaar in het [Engels](README.md), het
 3. Voer de API-sleutel en het VIN van elk voertuig in (meerdere VIN's gescheiden door komma's).
    De API heeft geen voertuiglijst, dus de VIN's moeten handmatig worden ingevoerd.
 4. Via **Configureren** wijzig je het pollinginterval (5-1440 minuten, standaard 10) of zet je
-   de alleen-lezen-modus aan.
+   de alleen-lezen-modus aan. Optioneel gebruik je het laadinterval ook zolang de laadkabel is aangesloten.
 
 Je kunt de API-sleutel (of de VIN's) op elk moment vervangen - vóór het verlopen of nadat je een nieuwe
 hebt aangemaakt - via **Instellingen → Apparaten & services → Škoda Connect → ⋮ → Opnieuw configureren**.
@@ -102,7 +102,8 @@ De integratie gebruikt uitsluitend de gedocumenteerde endpoints onder
 Elk voertuig heeft twee `number`-entiteiten (configuratie): **Pollinginterval** en **Pollinginterval
 tijdens laden**. Ze overschrijven de standaardwaarden uit de opties, werken direct zonder herladen
 en zijn via automatiseringen in te stellen (`number.set_value`). Zodra de laatst opgehaalde status
-`CHARGING` is, wordt het laadinterval gebruikt; na het starten van het laden kan het dus tot één
+`CHARGING` is (of, met de optie "Laadinterval ook gebruiken zolang de laadkabel is aangesloten", zodra de kabel
+is aangesloten) wordt het laadinterval gebruikt; na het starten van het laden kan het dus tot één
 normaal interval duren voordat het sneller pollen begint (laden starten via Home Assistant ververst
 na 30 seconden meteen).
 

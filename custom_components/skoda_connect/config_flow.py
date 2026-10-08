@@ -27,6 +27,7 @@ from .const import (
     API_KEYS_URL,
     CONF_API_KEY,
     CONF_CHARGING_SCAN_INTERVAL,
+    CONF_PLUGGED_IN_FAST_POLLING,
     CONF_READ_ONLY,
     CONF_VINS,
     DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES,
@@ -214,6 +215,7 @@ class SkodaConnectOptionsFlow(OptionsFlow):
         current_charging = self.config_entry.options.get(
             CONF_CHARGING_SCAN_INTERVAL, DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES
         )
+        current_plugged = self.config_entry.options.get(CONF_PLUGGED_IN_FAST_POLLING, False)
         current_read_only = self.config_entry.options.get(CONF_READ_ONLY, False)
 
         schema = vol.Schema(
@@ -238,6 +240,7 @@ class SkodaConnectOptionsFlow(OptionsFlow):
                         unit_of_measurement="min",
                     )
                 ),
+                vol.Required(CONF_PLUGGED_IN_FAST_POLLING, default=current_plugged): bool,
                 vol.Required(CONF_READ_ONLY, default=current_read_only): bool,
             }
         )

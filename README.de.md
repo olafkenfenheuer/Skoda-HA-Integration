@@ -88,8 +88,9 @@ Diese Dokumentation gibt es auf [Englisch](README.md), [Deutsch](README.de.md) u
    bietet keine Fahrzeugliste, daher müssen die VINs manuell eingegeben werden.
 4. Home Assistant prüft den Schlüssel und legt pro Fahrzeug ein Gerät mit allen passenden Entitäten an.
 5. Nach der Einrichtung kannst du im Dialog **Konfigurieren** das Abfrageintervall
-   (5–1440 Minuten, Standard 10), das kürzere Intervall **während des Ladens** (Standard 5) oder den
-   Nur-Lese-Modus einstellen.
+   (5–1440 Minuten, Standard 10), das kürzere Intervall **während des Ladens** (Standard 5) den
+   Nur-Lese-Modus oder die Option, das Ladeintervall **auch bei eingestecktem Ladekabel** zu verwenden
+   (nicht nur während des Ladens).
 
 Den API-Schlüssel (oder die VINs) kannst du jederzeit ersetzen – vor dem Ablauf oder nachdem du einen
 neuen erstellt hast – unter **Einstellungen → Geräte & Dienste → Škoda Connect → ⋮ → Neu konfigurieren**.
@@ -118,7 +119,9 @@ Jedes Fahrzeug hat zwei `number`-Entitäten (Kategorie Konfiguration): **Abfrage
 **Abfrageintervall beim Laden**. Sie überschreiben für dieses Fahrzeug die Standardwerte aus den
 Integrationsoptionen, gelten sofort ohne Neuladen und lassen sich aus Automationen setzen
 (`number.set_value`). Ein Fahrzeug wird mit seinem Ladeintervall abgefragt, sobald der zuletzt
-abgerufene Zustand `CHARGING` ist. Nach dem Start eines Ladevorgangs kann es daher bis zu ein
+abgerufene Zustand `CHARGING` ist (oder mit der Option „Ladeintervall auch bei eingestecktem Ladekabel
+verwenden“ sobald das Kabel eingesteckt ist – praktisch, um den Beginn eines zeitgesteuerten Ladevorgangs
+zu erfassen, hält aber das schnellere Intervall, solange das Auto angesteckt bleibt). Nach dem Start eines Ladevorgangs kann es daher bis zu ein
 normales Intervall dauern, bis das schnellere Polling greift – der Schalter bzw. Befehl „Laden“
 aktualisiert das Fahrzeug nach 30 Sekunden, sodass das Umschalten beim Start über Home Assistant
 sofort passiert.

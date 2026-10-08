@@ -46,6 +46,7 @@
         "data": {
           "scan_interval": "Pollinginterval (minuten)",
           "charging_scan_interval": "Pollinginterval tijdens laden (minuten)",
+          "plugged_in_fast_polling": "Laadinterval ook gebruiken zolang de laadkabel is aangesloten",
           "read_only": "Alleen-lezen modus (alle bedieningsfuncties uitschakelen)"
         }
       }

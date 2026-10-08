@@ -46,6 +46,7 @@
         "data": {
           "scan_interval": "Interval dotazování (minuty)",
           "charging_scan_interval": "Interval dotazování při nabíjení (minuty)",
+          "plugged_in_fast_polling": "Použít interval nabíjení i při zapojeném kabelu",
           "read_only": "Režim pouze pro čtení (vypne veškeré dálkové ovládání)"
         }
       }

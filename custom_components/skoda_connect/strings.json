@@ -46,6 +46,7 @@
         "data": {
           "scan_interval": "Polling interval (minutes)",
           "charging_scan_interval": "Polling interval while charging (minutes)",
+          "plugged_in_fast_polling": "Use the charging interval while the cable is plugged in",
           "read_only": "Read-only mode (disable all remote controls)"
         }
       }

@@ -46,6 +46,7 @@
         "data": {
           "scan_interval": "Intervalle d'interrogation (minutes)",
           "charging_scan_interval": "Intervalle d'interrogation pendant la charge (minutes)",
+          "plugged_in_fast_polling": "Utiliser l'intervalle de charge dès que le câble est branché",
           "read_only": "Mode lecture seule (désactive toutes les commandes à distance)"
         }
       }

@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.4]
+
+### Toegevoegd
+
+- Nieuwe optie "Laadinterval ook gebruiken zolang de laadkabel is aangesloten" (standaard uit): een
+  voertuig met aangesloten laadkabel wordt met het laadinterval gepolld, ook als het nog niet laadt,
+  bijv. om het begin van een tijdgestuurde lading snel te zien.
+
 ## [0.3.3]
 
 ### Toegevoegd

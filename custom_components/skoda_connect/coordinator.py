@@ -25,6 +25,7 @@ from .api import (
 )
 from .const import (
     CONF_CHARGING_SCAN_INTERVAL,
+    CONF_PLUGGED_IN_FAST_POLLING,
     CONF_VEHICLE_INTERVALS,
     DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES,
     DEFAULT_SCAN_INTERVAL_MINUTES,
@@ -80,6 +81,27 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         vehicle = self.data.vehicles.get(vin) if self.data else None
         return bool(vehicle and vehicle.get("charging", "status", "state") == "CHARGING")
 
+    def is_plugged_in(self, vin: str) -> bool:
+        """Return whether the last known state says the charging cable is plugged in."""
+        vehicle = self.data.vehicles.get(vin) if self.data else None
+        if vehicle is None:
+            return False
+        plug = vehicle.get("charging", "status", "plugConnectionState")
+        if plug is not None:
+            return plug == "CONNECTED"
+        # Older responses lack the plug state; a disconnected plug is always CONNECT_CABLE.
+        state = vehicle.get("charging", "status", "state")
+        return state is not None and state != "CONNECT_CABLE"
+
+    def uses_charging_interval(self, vin: str) -> bool:
+        """Return whether the vehicle is polled at its (shorter) charging interval."""
+        if self.is_charging(vin):
+            return True
+        return bool(
+            self.config_entry.options.get(CONF_PLUGGED_IN_FAST_POLLING, False)
+            and self.is_plugged_in(vin)
+        )
+
     def interval_minutes(self, vin: str, kind: str) -> int:
         """Return the configured interval of a vehicle; ``kind`` is "idle" or "charging"."""
         options = self.config_entry.options
@@ -93,7 +115,7 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         return int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES))
 
     def _interval_for(self, vin: str) -> timedelta:
-        kind = "charging" if self.is_charging(vin) else "idle"
+        kind = "charging" if self.uses_charging_interval(vin) else "idle"
         return timedelta(minutes=self.interval_minutes(vin, kind))
 
     def _shortest_interval(self) -> timedelta:

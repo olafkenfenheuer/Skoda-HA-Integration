@@ -86,7 +86,7 @@ This documentation itself is available in [English](README.md),
 4. Home Assistant validates the key and creates one device per vehicle with all applicable
    entities.
 5. After setup, open the integration's **Configure** dialog to change the polling interval
-   (5-1440 minutes, default 10), the shorter interval used **while charging** (default 5), or enable read-only mode.
+   (5-1440 minutes, default 10), the shorter interval used **while charging** (default 5), optionally also use that charging interval **while the cable is plugged in** (not only while charging), or enable read-only mode.
 
 You can replace the API key (or change the VINs) at any time - before it expires, or after creating a
 new one - via **Settings → Devices & Services → Škoda Connect → ⋮ → Reconfigure**. The entry is reloaded
@@ -114,7 +114,9 @@ Every vehicle has two `number` entities (configuration category): **Polling inte
 **Polling interval while charging**. They override the defaults from the integration options for
 that vehicle, apply immediately without reloading, and can be set from automations
 (`number.set_value`). A vehicle is polled at its charging interval as soon as the last fetched
-state is `CHARGING`, so after a charge starts it can take up to one normal interval until the
+state is `CHARGING` (or, with the option "Use the charging interval while the cable is plugged in",
+as soon as the cable is plugged in - useful to catch the start of a timer-controlled charge, but it keeps
+the faster interval for as long as the car stays plugged in), so after a charge starts it can take up to one normal interval until the
 faster polling kicks in - the "Charging" switch/command refreshes the vehicle after 30 seconds, so
 starting charging from Home Assistant switches over right away.
 

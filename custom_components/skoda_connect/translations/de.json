@@ -46,6 +46,7 @@
         "data": {
           "scan_interval": "Abfrageintervall (Minuten)",
           "charging_scan_interval": "Abfrageintervall beim Laden (Minuten)",
+          "plugged_in_fast_polling": "Ladeintervall auch bei eingestecktem Ladekabel verwenden",
           "read_only": "Nur-Lese-Modus (alle Fernsteuerungen deaktivieren)"
         }
       }

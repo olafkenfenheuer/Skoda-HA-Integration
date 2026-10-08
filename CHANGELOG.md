@@ -5,6 +5,14 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.4]
+
+### Added
+
+- New option "Use the charging interval while the cable is plugged in" (off by default): a vehicle
+  with a plugged-in charging cable is polled at its charging interval even when it is not charging
+  yet, e.g. to catch the start of a timer-controlled charge quickly.
+
 ## [0.3.3]
 
 ### Added
