@@ -23,7 +23,7 @@ an options flow, reauthentication support, and a diagnostics download.
 | `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
 | `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |
 | `switch` | Start/stop charging |
-| `number` | Charge limit (target state of charge) |
+| `number` | Charge limit (target state of charge), polling interval (5-120 min, applies immediately) |
 | `select` | Charge mode |
 
 Sensors and controls are only created for the data and remote operations your specific vehicle

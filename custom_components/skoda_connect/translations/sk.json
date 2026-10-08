@@ -126,6 +126,9 @@
     "number": {
       "charge_limit": {
         "name": "Limit nabitia"
+      },
+      "poll_interval": {
+        "name": "Interval dopytovania"
       }
     },
     "select": {

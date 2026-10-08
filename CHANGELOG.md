@@ -5,6 +5,14 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1]
+
+### Added
+
+- `number` entity "Polling interval" (5-120 min) to change the polling interval at runtime, e.g. from
+  automations or dashboards. It is stored in the entry options and applies without a reload;
+  changing the interval in the options dialog is applied the same way.
+
 ## [0.3.0]
 
 ### Changed

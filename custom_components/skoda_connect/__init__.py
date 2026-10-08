@@ -68,5 +68,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bo
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:
-    """Reload the entry when its options change."""
+    """Apply changed options; only reload when something other than the interval changed."""
+    coordinator = entry.runtime_data
+    if entry.options.get(CONF_READ_ONLY, False) == coordinator.read_only:
+        minutes = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES)
+        coordinator.set_update_interval(timedelta(minutes=minutes))
+        return
     await hass.config_entries.async_reload(entry.entry_id)

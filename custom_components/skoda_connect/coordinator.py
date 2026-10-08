@@ -128,6 +128,13 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
             self.hass, POST_COMMAND_REFRESH_DELAY, self._async_delayed_refresh
         )
 
+    def set_update_interval(self, interval: timedelta) -> None:
+        """Change the polling interval and reschedule the next poll accordingly."""
+        if interval == self.update_interval:
+            return
+        self.update_interval = interval
+        self._schedule_refresh()
+
     async def _async_delayed_refresh(self, _now) -> None:
         self._cancel_refresh = None
         await self.async_request_refresh()

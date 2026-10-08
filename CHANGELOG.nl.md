@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1]
+
+### Toegevoegd
+
+- `number`-entiteit "Pollinginterval" (5-120 min) om het pollinginterval tijdens gebruik te wijzigen,
+  bijv. via automatiseringen of dashboards. Wordt opgeslagen in de opties en werkt zonder herladen;
+  wijzigen via het optiesvenster werkt nu ook zo.
+
 ## [0.3.0]
 
 ### Gewijzigd

@@ -126,6 +126,9 @@
     "number": {
       "charge_limit": {
         "name": "Limite de charge"
+      },
+      "poll_interval": {
+        "name": "Intervalle d'interrogation"
       }
     },
     "select": {

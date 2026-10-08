@@ -20,7 +20,7 @@ externe client-bibliotheek.
 | `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
 | `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
 | `switch` | Laden starten/stoppen |
-| `number` | Laadlimiet (doel-laadniveau) |
+| `number` | Laadlimiet (doel-laadniveau), pollinginterval (5-120 min, direct actief) |
 | `select` | Laadmodus |
 
 Sensoren en bediening worden alleen aangemaakt voor de gegevens en acties die jouw voertuig

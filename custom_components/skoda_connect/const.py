@@ -21,6 +21,8 @@ CONF_READ_ONLY: Final = "read_only"
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 10
 MIN_SCAN_INTERVAL_MINUTES: Final = 5
 MAX_SCAN_INTERVAL_MINUTES: Final = 1440
+# Upper end of the slider of the polling interval number entity.
+POLL_INTERVAL_NUMBER_MAX_MINUTES: Final = 120
 
 # Commands are accepted asynchronously (HTTP 202); refresh once shortly afterwards so the
 # new state shows up without waiting for the next poll.

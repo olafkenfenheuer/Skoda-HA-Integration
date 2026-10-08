@@ -126,6 +126,9 @@
     "number": {
       "charge_limit": {
         "name": "Laadlimiet"
+      },
+      "poll_interval": {
+        "name": "Pollinginterval"
       }
     },
     "select": {
