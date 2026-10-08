@@ -5,6 +5,12 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.2]
+
+### Toegevoegd
+
+- Škoda-pictogram voor de integratie, meegeleverd als `brand/icon.png` (zichtbaar in Home Assistant 2026.3 of nieuwer).
+
 ## [0.3.1]
 
 ### Toegevoegd
