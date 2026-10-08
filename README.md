@@ -3,12 +3,11 @@
 [🇬🇧 English](README.md) | [🇳🇱 Nederlands](README.nl.md)
 
 A multi-language [Home Assistant](https://www.home-assistant.io/) custom integration for
-Škoda vehicles, built on the official public MySkoda API
-([public.api.connect.skoda-auto.cz](https://public.api.connect.skoda-auto.cz/docs)) via the
+Škoda vehicles, built on the MySkoda app API via the
 actively maintained [`myskoda`](https://github.com/skodaconnect/myskoda) Python client.
 
 > **Unofficial project.** This integration is not affiliated with, endorsed by, or associated
-> with Škoda Auto. It uses the same public API as the official MySkoda app. Use at your own risk.
+> with Škoda Auto. It uses the same (undocumented) backend API as the official MySkoda app. Use at your own risk.
 
 ## Features
 
@@ -86,13 +85,23 @@ re-enter your password to restore the connection without losing entity history.
 
 This integration deliberately depends on the community-maintained `myskoda` PyPI package rather
 than re-implementing the Škoda OAuth2/REST/MQTT client from scratch, so it benefits from
-upstream fixes and coverage of the public API's evolving vehicle capabilities. Data is refreshed
+upstream fixes and coverage of the API's evolving vehicle capabilities. Data is refreshed
 by polling only — MQTT push notifications from the API are not used, keeping the integration
 simple and avoiding an extra point of failure.
 
+### Official public API (not used yet)
+
+Škoda now also offers an official
+[MySkoda Public API](https://public.api.connect.skoda-auto.cz/docs) for third-party developers
+(authentication via an `X-API-Key` header, keys created in the MySkoda app, bound to selected
+vehicles and expiring). **This integration does not use it.** `myskoda` talks to the
+app backend (`mysmob.api.connect.skoda-auto.cz`) and logs in with e-mail/password via
+`identity.vwgroup.io`. Migrating would need a new client and a different config flow (API key
+instead of credentials).
+
 ### Rate limits
 
-The public MySkoda API enforces a per-account request quota and returns HTTP 429 (Too Many
+The MySkoda API enforces a per-account request quota and returns HTTP 429 (Too Many
 Requests) once it is exceeded — the `myskoda` client itself does not retry or back off on this.
 Community reports (see
 [skodaconnect/homeassistant-myskoda#1053](https://github.com/skodaconnect/homeassistant-myskoda/issues/1053))
@@ -118,4 +127,4 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 ## Disclaimer
 
 Provided as-is, without warranty. Škoda Auto may change its API at any time, which can break
-this integration. Use of the MySkoda public API is subject to Škoda's own terms of service.
+this integration. Use of the MySkoda API is subject to Škoda's own terms of service.
