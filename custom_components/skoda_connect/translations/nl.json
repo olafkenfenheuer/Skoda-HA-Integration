@@ -2,31 +2,31 @@
   "config": {
     "step": {
       "user": {
-        "title": "Verbind je Škoda Connect-account",
-        "description": "Vul de inloggegevens in die je ook gebruikt in de MySkoda-app.",
+        "title": "Je Škoda-account koppelen",
+        "description": "Maak in de MyŠkoda-app een API-sleutel aan ({api_keys_url}) en voer deze in samen met het VIN van elk voertuig waarvoor hij is aangemaakt (meerdere VIN's scheiden met komma's).",
         "data": {
-          "email": "E-mailadres",
-          "password": "Wachtwoord",
-          "spin": "S-PIN (optioneel, nodig om te vergrendelen/ontgrendelen)"
+          "api_key": "API-sleutel",
+          "vins": "VIN(s)"
         }
       },
       "reauth_confirm": {
-        "title": "Opnieuw aanmelden bij Škoda Connect",
-        "description": "Je Škoda Connect-sessie voor {email} is verlopen. Voer je wachtwoord opnieuw in.",
+        "title": "Škoda Connect API-sleutel vernieuwen",
+        "description": "Škoda Connect gebruikt nu een API-sleutel in plaats van je inloggegevens. Maak er een aan in de MyŠkoda-app ({api_keys_url}) en voer hem in met het/de VIN(s) van je voertuig(en).",
         "data": {
-          "password": "Wachtwoord"
+          "api_key": "API-sleutel",
+          "vins": "VIN(s)"
         }
       }
     },
     "error": {
-      "invalid_auth": "Ongeldig e-mailadres of wachtwoord.",
+      "invalid_auth": "De API-sleutel is ongeldig, verlopen of niet gemachtigd voor dit voertuig.",
+      "invalid_vin": "Voer geldige VIN's van 17 tekens in, gescheiden door komma's.",
       "cannot_connect": "Kan geen verbinding maken met Škoda Connect. Probeer het later opnieuw.",
-      "no_vehicles": "Er zijn geen voertuigen gevonden op dit account.",
-      "rate_limited": "De rate limit van de Škoda Connect API is bereikt. Wacht even voordat je het opnieuw probeert."
+      "rate_limited": "De limiet van de Škoda Connect API is bereikt. Wacht even voordat je het opnieuw probeert."
     },
     "abort": {
-      "already_configured": "Dit account is al geconfigureerd.",
-      "reauth_successful": "Opnieuw aanmelden is gelukt."
+      "already_configured": "Deze voertuigselectie is al geconfigureerd.",
+      "reauth_successful": "Opnieuw verifiëren is gelukt."
     }
   },
   "options": {
@@ -42,53 +42,96 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": { "name": "Batterijniveau" },
-      "charge_power": { "name": "Laadvermogen" },
-      "charging_rate": { "name": "Laadsnelheid" },
-      "remaining_charging_time": { "name": "Resterende laadtijd" },
-      "battery_range": { "name": "Actieradius batterij" },
-      "total_range": { "name": "Totale actieradius" },
-      "fuel_level": { "name": "Brandstofniveau" },
-      "ad_blue_range": { "name": "AdBlue-bereik" },
-      "mileage": { "name": "Kilometerstand" },
-      "outside_temperature": { "name": "Buitentemperatuur" },
-      "target_temperature": { "name": "Doeltemperatuur" },
-      "software_version": { "name": "Softwareversie" },
-      "location_address": { "name": "Adres" },
-      "charging_location_profile": { "name": "Laadlocatie" }
+      "battery_level": {
+        "name": "Batterijniveau"
+      },
+      "charge_power": {
+        "name": "Laadvermogen"
+      },
+      "charging_rate": {
+        "name": "Laadsnelheid"
+      },
+      "remaining_charging_time": {
+        "name": "Resterende laadtijd"
+      },
+      "battery_range": {
+        "name": "Actieradius batterij"
+      },
+      "total_range": {
+        "name": "Totale actieradius"
+      },
+      "fuel_level": {
+        "name": "Brandstofniveau"
+      },
+      "ad_blue_range": {
+        "name": "AdBlue-bereik"
+      },
+      "mileage": {
+        "name": "Kilometerstand"
+      },
+      "target_temperature": {
+        "name": "Doeltemperatuur"
+      },
+      "location_address": {
+        "name": "Adres"
+      },
+      "charging_location_profile": {
+        "name": "Laadlocatie"
+      }
     },
     "binary_sensor": {
-      "doors_open": { "name": "Portieren" },
-      "windows_open": { "name": "Ramen" },
-      "trunk_open": { "name": "Kofferbak" },
-      "bonnet_open": { "name": "Motorkap" },
-      "lights_on": { "name": "Verlichting" },
-      "charging": { "name": "Aan het laden" },
-      "plugged_in": { "name": "Laadkabel" },
-      "vehicle_in_saved_location": { "name": "Bij opgeslagen laadlocatie" }
-    },
-    "lock": {
-      "vehicle_lock": { "name": "Voertuig" }
+      "doors_open": {
+        "name": "Portieren"
+      },
+      "windows_open": {
+        "name": "Ramen"
+      },
+      "trunk_open": {
+        "name": "Kofferbak"
+      },
+      "bonnet_open": {
+        "name": "Motorkap"
+      },
+      "lights_on": {
+        "name": "Verlichting"
+      },
+      "charging": {
+        "name": "Aan het laden"
+      },
+      "plugged_in": {
+        "name": "Laadkabel"
+      },
+      "vehicle_in_saved_location": {
+        "name": "Bij opgeslagen laadlocatie"
+      },
+      "unlocked": {
+        "name": "Centrale vergrendeling"
+      }
     },
     "device_tracker": {
-      "vehicle_location": { "name": "Locatie" }
+      "vehicle_location": {
+        "name": "Locatie"
+      }
     },
     "climate": {
-      "air_conditioning": { "name": "Airconditioning" }
+      "air_conditioning": {
+        "name": "Airconditioning"
+      }
     },
     "switch": {
-      "window_heating": { "name": "Ruitverwarming" },
-      "charging": { "name": "Laden" },
-      "battery_care_mode": { "name": "Batterijbeschermingsmodus" },
-      "reduced_charging_current": { "name": "Verminderde laadstroom" }
-    },
-    "button": {
-      "honk_and_flash": { "name": "Claxon en knipperlichten" },
-      "flash": { "name": "Lichten knipperen" },
-      "wakeup": { "name": "Voertuig wekken" }
+      "charging": {
+        "name": "Laden"
+      }
     },
     "number": {
-      "charge_limit": { "name": "Laadlimiet" }
+      "charge_limit": {
+        "name": "Laadlimiet"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Laadmodus"
+      }
     }
   }
 }

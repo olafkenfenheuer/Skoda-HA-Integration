@@ -2,31 +2,31 @@
   "config": {
     "step": {
       "user": {
-        "title": "Škoda Connect-Konto verbinden",
-        "description": "Gib die Zugangsdaten ein, die du auch in der MySkoda-App verwendest.",
+        "title": "Škoda-Konto verbinden",
+        "description": "Erstelle in der MyŠkoda-App einen API-Schlüssel ({api_keys_url}) und gib ihn zusammen mit der FIN/VIN jedes Fahrzeugs ein, für das er erstellt wurde (mehrere VINs durch Komma trennen).",
         "data": {
-          "email": "E-Mail-Adresse",
-          "password": "Passwort",
-          "spin": "S-PIN (optional, erforderlich zum Ver-/Entriegeln)"
+          "api_key": "API-Schlüssel",
+          "vins": "VIN(s)"
         }
       },
       "reauth_confirm": {
-        "title": "Bei Škoda Connect erneut anmelden",
-        "description": "Deine Škoda Connect-Sitzung für {email} ist abgelaufen. Bitte gib dein Passwort erneut ein.",
+        "title": "Škoda Connect API-Schlüssel aktualisieren",
+        "description": "Škoda Connect verwendet jetzt einen API-Schlüssel statt deines Logins. Erstelle einen in der MyŠkoda-App ({api_keys_url}) und gib ihn zusammen mit der/den VIN(s) deiner Fahrzeuge ein.",
         "data": {
-          "password": "Passwort"
+          "api_key": "API-Schlüssel",
+          "vins": "VIN(s)"
         }
       }
     },
     "error": {
-      "invalid_auth": "Ungültige E-Mail-Adresse oder ungültiges Passwort.",
+      "invalid_auth": "Der API-Schlüssel ist ungültig, abgelaufen oder für dieses Fahrzeug nicht berechtigt.",
+      "invalid_vin": "Gib gültige 17-stellige VINs ein, durch Komma getrennt.",
       "cannot_connect": "Verbindung zu Škoda Connect nicht möglich. Bitte später erneut versuchen.",
-      "no_vehicles": "Für dieses Konto wurden keine Fahrzeuge gefunden.",
       "rate_limited": "Das Ratenlimit der Škoda Connect API wurde erreicht. Bitte warte eine Weile, bevor du es erneut versuchst."
     },
     "abort": {
-      "already_configured": "Dieses Konto ist bereits konfiguriert.",
-      "reauth_successful": "Die erneute Anmeldung war erfolgreich."
+      "already_configured": "Diese Fahrzeugauswahl ist bereits konfiguriert.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich."
     }
   },
   "options": {
@@ -42,53 +42,96 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": { "name": "Batteriestand" },
-      "charge_power": { "name": "Ladeleistung" },
-      "charging_rate": { "name": "Laderate" },
-      "remaining_charging_time": { "name": "Verbleibende Ladezeit" },
-      "battery_range": { "name": "Reichweite Batterie" },
-      "total_range": { "name": "Gesamtreichweite" },
-      "fuel_level": { "name": "Kraftstoffstand" },
-      "ad_blue_range": { "name": "AdBlue-Reichweite" },
-      "mileage": { "name": "Kilometerstand" },
-      "outside_temperature": { "name": "Außentemperatur" },
-      "target_temperature": { "name": "Zieltemperatur" },
-      "software_version": { "name": "Softwareversion" },
-      "location_address": { "name": "Adresse" },
-      "charging_location_profile": { "name": "Ladestandort" }
+      "battery_level": {
+        "name": "Batteriestand"
+      },
+      "charge_power": {
+        "name": "Ladeleistung"
+      },
+      "charging_rate": {
+        "name": "Laderate"
+      },
+      "remaining_charging_time": {
+        "name": "Verbleibende Ladezeit"
+      },
+      "battery_range": {
+        "name": "Reichweite Batterie"
+      },
+      "total_range": {
+        "name": "Gesamtreichweite"
+      },
+      "fuel_level": {
+        "name": "Kraftstoffstand"
+      },
+      "ad_blue_range": {
+        "name": "AdBlue-Reichweite"
+      },
+      "mileage": {
+        "name": "Kilometerstand"
+      },
+      "target_temperature": {
+        "name": "Zieltemperatur"
+      },
+      "location_address": {
+        "name": "Adresse"
+      },
+      "charging_location_profile": {
+        "name": "Ladestandort"
+      }
     },
     "binary_sensor": {
-      "doors_open": { "name": "Türen" },
-      "windows_open": { "name": "Fenster" },
-      "trunk_open": { "name": "Kofferraum" },
-      "bonnet_open": { "name": "Motorhaube" },
-      "lights_on": { "name": "Beleuchtung" },
-      "charging": { "name": "Lädt" },
-      "plugged_in": { "name": "Ladekabel" },
-      "vehicle_in_saved_location": { "name": "An gespeichertem Ladestandort" }
-    },
-    "lock": {
-      "vehicle_lock": { "name": "Fahrzeug" }
+      "doors_open": {
+        "name": "Türen"
+      },
+      "windows_open": {
+        "name": "Fenster"
+      },
+      "trunk_open": {
+        "name": "Kofferraum"
+      },
+      "bonnet_open": {
+        "name": "Motorhaube"
+      },
+      "lights_on": {
+        "name": "Beleuchtung"
+      },
+      "charging": {
+        "name": "Lädt"
+      },
+      "plugged_in": {
+        "name": "Ladekabel"
+      },
+      "vehicle_in_saved_location": {
+        "name": "An gespeichertem Ladestandort"
+      },
+      "unlocked": {
+        "name": "Zentralverriegelung"
+      }
     },
     "device_tracker": {
-      "vehicle_location": { "name": "Standort" }
+      "vehicle_location": {
+        "name": "Standort"
+      }
     },
     "climate": {
-      "air_conditioning": { "name": "Klimaanlage" }
+      "air_conditioning": {
+        "name": "Klimaanlage"
+      }
     },
     "switch": {
-      "window_heating": { "name": "Scheibenheizung" },
-      "charging": { "name": "Laden" },
-      "battery_care_mode": { "name": "Batterieschonmodus" },
-      "reduced_charging_current": { "name": "Reduzierter Ladestrom" }
-    },
-    "button": {
-      "honk_and_flash": { "name": "Hupen und Blinken" },
-      "flash": { "name": "Lichthupe" },
-      "wakeup": { "name": "Fahrzeug aufwecken" }
+      "charging": {
+        "name": "Laden"
+      }
     },
     "number": {
-      "charge_limit": { "name": "Ladegrenze" }
+      "charge_limit": {
+        "name": "Ladegrenze"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Lademodus"
+      }
     }
   }
 }

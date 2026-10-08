@@ -3,12 +3,12 @@
 [🇬🇧 English](README.md) | [🇳🇱 Nederlands](README.nl.md)
 
 A multi-language [Home Assistant](https://www.home-assistant.io/) custom integration for
-Škoda vehicles, built on the official public MySkoda API
-([public.api.connect.skoda-auto.cz](https://public.api.connect.skoda-auto.cz/docs)) via the
-actively maintained [`myskoda`](https://github.com/skodaconnect/myskoda) Python client.
+Škoda vehicles, built on the official
+[MyŠkoda Public API](https://public.api.connect.skoda-auto.cz/docs). It talks to the API
+directly with an **API key** - no username/password and no third-party client library.
 
 > **Unofficial project.** This integration is not affiliated with, endorsed by, or associated
-> with Škoda Auto. It uses the same public API as the official MySkoda app. Use at your own risk.
+> with Škoda Auto. Use at your own risk.
 
 ## Features
 
@@ -18,20 +18,27 @@ an options flow, reauthentication support, and a diagnostics download.
 
 | Platform | Entities |
 |---|---|
-| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, outside/target temperature, software version, address of the vehicle's last known location, name of the charging location profile currently active |
-| `binary_sensor` | Doors, windows, trunk, bonnet, lights, charging, charging cable plugged in, vehicle at saved charging location |
-| `lock` | Central locking (requires S-PIN) |
-| `device_tracker` | Last known vehicle GPS position (shows on the Map dashboard) |
-| `climate` | Remote air conditioning (on/off, ventilation, target temperature) |
-| `switch` | Window heating, charging, battery care mode, reduced charging current |
-| `button` | Honk & flash, flash lights, wake up vehicle |
-| `number` | AC charge limit (state of charge) |
+| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, target temperature, address of the parking position, name of the charging location profile currently active |
+| `binary_sensor` | Doors, windows, trunk, bonnet, lights, central locking, charging, charging cable plugged in, vehicle at saved charging location |
+| `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
+| `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |
+| `switch` | Start/stop charging |
+| `number` | Charge limit (target state of charge) |
+| `select` | Charge mode |
 
-Sensors and controls are only created for the data your specific vehicle actually reports, so
-the entity list automatically adapts to your car's capabilities (EV, PHEV, or combustion).
+Sensors and controls are only created for the data and remote operations your specific vehicle
+reports, so the entity list adapts to your car (EV, PHEV, or combustion).
 
 A **read-only mode** can be enabled in the integration options to disable all remote controls
-(locking, climate, charging, buttons) while keeping all sensors active.
+while keeping all sensors active.
+
+### What the public API does not offer
+
+Compared to earlier versions (which used the app's private API) the following are no longer
+possible, because the public API has no endpoint for them: locking/unlocking, honk & flash,
+waking up the vehicle, window heating, battery care mode, reduced charging current, outside
+temperature and software version. The lock is now a read-only `binary_sensor`; the other
+entities were removed.
 
 ## Supported languages
 
@@ -71,45 +78,48 @@ This documentation itself is available in [English](README.md) and
 
 ## Configuration
 
-1. Go to **Settings → Devices & Services → Add Integration** and search for "Škoda Connect".
-2. Enter the email address and password you use for the MySkoda app.
-3. Optionally enter your S-PIN — this is required for the lock entity to work.
-4. Home Assistant will validate the login and, on success, create one device per vehicle on
-   the account with all applicable entities.
+1. In the MyŠkoda app, create an API key at <https://go.skoda.eu/api-keys> and select the
+   vehicle(s) it should be valid for. Keys are bound to those vehicles and expire.
+2. Go to **Settings → Devices & Services → Add Integration** and search for "Škoda Connect".
+3. Enter the API key and the VIN of each vehicle (several VINs separated by commas). The API
+   has no vehicle list endpoint, so the VINs have to be entered manually.
+4. Home Assistant validates the key and creates one device per vehicle with all applicable
+   entities.
 5. After setup, open the integration's **Configure** dialog to change the polling interval
-   (15–1440 minutes, default 15) or enable read-only mode.
+   (5-1440 minutes, default 10) or enable read-only mode.
 
-If your session expires, Home Assistant shows a "reauthenticate" notification — click it and
-re-enter your password to restore the connection without losing entity history.
+When the key expires (the API reports `api-key-expired`) Home Assistant shows a
+"reauthenticate" notification - create a new key and enter it to restore the connection
+without losing entity history.
+
+### Upgrading from 0.2.x
+
+Existing entries used your MySkoda email and password, which the public API does not accept.
+After updating, Home Assistant asks you to reauthenticate: enter a new API key and the VIN(s).
+Entity IDs and history of the entities that still exist are preserved.
 
 ## Notes on the API
 
-This integration deliberately depends on the community-maintained `myskoda` PyPI package rather
-than re-implementing the Škoda OAuth2/REST/MQTT client from scratch, so it benefits from
-upstream fixes and coverage of the public API's evolving vehicle capabilities. Data is refreshed
-by polling only — MQTT push notifications from the API are not used, keeping the integration
-simple and avoiding an extra point of failure.
+The integration only uses the documented endpoints under
+`https://public.api.connect.skoda-auto.cz/api/v1/vehicles/{vin}` and authenticates with the
+`X-API-Key` header. Data is refreshed by polling.
 
 ### Rate limits
 
-The public MySkoda API enforces a per-account request quota and returns HTTP 429 (Too Many
-Requests) once it is exceeded — the `myskoda` client itself does not retry or back off on this.
-Community reports (see
-[skodaconnect/homeassistant-myskoda#1053](https://github.com/skodaconnect/homeassistant-myskoda/issues/1053))
-show that polling too aggressively can get an account temporarily rate limited, or in the worst
-case locked out, especially since fetching one vehicle's full state costs roughly 10–13 separate
-API requests (one per supported capability, plus vehicle info and maintenance data).
+The API currently allows **20 requests per hour per VIN** (documented as not final). A poll
+costs one request per vehicle, and every remote command costs one more. Therefore this
+integration:
 
-To stay well within the quota, this integration:
+- Defaults to a 10-minute polling interval (6 requests/hour) with a 5-minute minimum.
+- Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so
+  it schedules a single refresh 30 seconds after the last command.
+- Detects HTTP 429 responses and pauses polling, honoring `Retry-After` (at least 15 minutes,
+  at most 1 hour), and logs a warning when this happens.
+- Keeps the last known state of a vehicle if only its request failed.
 
-- Defaults to a 15-minute polling interval, which is also the enforced minimum in the options
-  flow — you cannot accidentally configure a shorter, even riskier interval. If you have
-  multiple vehicles on one account, consider raising this.
-- Explicitly detects HTTP 429/430 responses and pauses polling, honoring the API's `Retry-After`
-  header when present (falling back to a 15-minute pause, capped at 1 hour, if it's absent or
-  unparsable), instead of hammering the API again on the very next tick.
-- Logs a clear warning when this happens, so you can see it in **Settings → System → Logs**
-  rather than the integration silently retrying too soon.
+Parts of the vehicle the API cannot report (for example because the vehicle is asleep) are
+simply omitted from its response; the corresponding entities are created once the data is
+available, which can require reloading the integration.
 
 ## Changelog
 
@@ -118,4 +128,4 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 ## Disclaimer
 
 Provided as-is, without warranty. Škoda Auto may change its API at any time, which can break
-this integration. Use of the MySkoda public API is subject to Škoda's own terms of service.
+this integration. Use of the MyŠkoda Public API is subject to Škoda's own terms of service.
