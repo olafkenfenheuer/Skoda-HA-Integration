@@ -12,6 +12,9 @@ API_KEYS_URL: Final = "https://go.skoda.eu/api-keys"
 CONF_API_KEY: Final = "api_key"
 CONF_VINS: Final = "vins"
 CONF_READ_ONLY: Final = "read_only"
+CONF_CHARGING_SCAN_INTERVAL: Final = "charging_scan_interval"
+# Per-vehicle overrides in the entry options: {vin: {"idle": minutes, "charging": minutes}}
+CONF_VEHICLE_INTERVALS: Final = "vehicle_intervals"
 
 # The public API allows 20 requests per hour and VIN (the limit is documented as not
 # final), and every command counts against the same quota. One poll costs a single
@@ -19,9 +22,11 @@ CONF_READ_ONLY: Final = "read_only"
 # MIN_SCAN_INTERVAL_MINUTES is a hard floor so the options flow can't be set to a value
 # that all but guarantees rate limiting.
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 10
+# Polling interval while a vehicle is charging (state changes are what you want to see).
+DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES: Final = 5
 MIN_SCAN_INTERVAL_MINUTES: Final = 5
 MAX_SCAN_INTERVAL_MINUTES: Final = 1440
-# Upper end of the slider of the polling interval number entity.
+# Upper end of the sliders of the per-vehicle polling interval number entities.
 POLL_INTERVAL_NUMBER_MAX_MINUTES: Final = 120
 
 # Commands are accepted asynchronously (HTTP 202); refresh once shortly afterwards so the

@@ -3,20 +3,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
 
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SkodaApi
-from .const import (
-    CONF_API_KEY,
-    CONF_READ_ONLY,
-    CONF_VINS,
-    DEFAULT_SCAN_INTERVAL_MINUTES,
-)
+from .const import CONF_API_KEY, CONF_READ_ONLY, CONF_VINS
 from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,14 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> boo
         raise ConfigEntryAuthFailed("An API key is required; create one in the MyŠkoda app")
 
     api = SkodaApi(async_get_clientsession(hass), api_key)
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES)
-    coordinator = SkodaDataUpdateCoordinator(
-        hass,
-        entry,
-        api,
-        list(vins),
-        update_interval=timedelta(minutes=scan_interval),
-    )
+    coordinator = SkodaDataUpdateCoordinator(hass, entry, api, list(vins))
     coordinator.read_only = entry.options.get(CONF_READ_ONLY, False)
 
     await coordinator.async_config_entry_first_refresh()
@@ -71,7 +58,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: SkodaConfigEntry) -
     """Apply changed options; only reload when something other than the interval changed."""
     coordinator = entry.runtime_data
     if entry.options.get(CONF_READ_ONLY, False) == coordinator.read_only:
-        minutes = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES)
-        coordinator.set_update_interval(timedelta(minutes=minutes))
+        coordinator.reschedule()
         return
     await hass.config_entries.async_reload(entry.entry_id)

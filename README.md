@@ -23,7 +23,7 @@ an options flow, reauthentication support, and a diagnostics download.
 | `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
 | `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |
 | `switch` | Start/stop charging |
-| `number` | Charge limit (target state of charge), polling interval (5-120 min, applies immediately) |
+| `number` | Charge limit (target state of charge), per-vehicle polling intervals (normal / while charging) |
 | `select` | Charge mode |
 
 Sensors and controls are only created for the data and remote operations your specific vehicle
@@ -86,7 +86,7 @@ This documentation itself is available in [English](README.md) and
 4. Home Assistant validates the key and creates one device per vehicle with all applicable
    entities.
 5. After setup, open the integration's **Configure** dialog to change the polling interval
-   (5-1440 minutes, default 10) or enable read-only mode.
+   (5-1440 minutes, default 10), the shorter interval used **while charging** (default 5), or enable read-only mode.
 
 When the key expires (the API reports `api-key-expired`) Home Assistant shows a
 "reauthenticate" notification - create a new key and enter it to restore the connection
@@ -104,13 +104,24 @@ The integration only uses the documented endpoints under
 `https://public.api.connect.skoda-auto.cz/api/v1/vehicles/{vin}` and authenticates with the
 `X-API-Key` header. Data is refreshed by polling.
 
+### Per-vehicle polling intervals
+
+Every vehicle has two `number` entities (configuration category): **Polling interval** and
+**Polling interval while charging**. They override the defaults from the integration options for
+that vehicle, apply immediately without reloading, and can be set from automations
+(`number.set_value`). A vehicle is polled at its charging interval as soon as the last fetched
+state is `CHARGING`, so after a charge starts it can take up to one normal interval until the
+faster polling kicks in - the "Charging" switch/command refreshes the vehicle after 30 seconds, so
+starting charging from Home Assistant switches over right away.
+
 ### Rate limits
 
 The API currently allows **20 requests per hour per VIN** (documented as not final). A poll
 costs one request per vehicle, and every remote command costs one more. Therefore this
 integration:
 
-- Defaults to a 10-minute polling interval (6 requests/hour) with a 5-minute minimum.
+- Defaults to a 10-minute polling interval (6 requests/hour) with a 5-minute minimum, and to 5 minutes
+  while a vehicle is charging (12 requests/hour - leave room for commands).
 - Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so
   it schedules a single refresh 30 seconds after the last command.
 - Detects HTTP 429 responses and pauses polling, honoring `Retry-After` (at least 15 minutes,

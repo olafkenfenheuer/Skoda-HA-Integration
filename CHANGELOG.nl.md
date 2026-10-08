@@ -9,9 +9,11 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Toegevoegd
 
-- `number`-entiteit "Pollinginterval" (5-120 min) om het pollinginterval tijdens gebruik te wijzigen,
-  bijv. via automatiseringen of dashboards. Wordt opgeslagen in de opties en werkt zonder herladen;
-  wijzigen via het optiesvenster werkt nu ook zo.
+- **Pollinginterval per voertuig**: elk voertuig krijgt `number`-entiteiten "Pollinginterval" en
+  "Pollinginterval tijdens laden" (5-120 min). Tijdens het laden wordt het kortere interval gebruikt.
+  Wijzigingen werken direct zonder herladen. Nieuwe optie "Pollinginterval tijdens laden"
+  (standaard 5 min) stelt de standaardwaarde in.
+- Een commando ververst nu alleen het voertuig waarvoor het bedoeld was.
 
 ## [0.3.0]
 

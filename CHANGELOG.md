@@ -9,9 +9,11 @@ All notable changes to this integration are documented here. The format follows
 
 ### Added
 
-- `number` entity "Polling interval" (5-120 min) to change the polling interval at runtime, e.g. from
-  automations or dashboards. It is stored in the entry options and applies without a reload;
-  changing the interval in the options dialog is applied the same way.
+- **Per-vehicle polling intervals**: each vehicle gets `number` entities "Polling interval" and
+  "Polling interval while charging" (5-120 min). A vehicle is polled at its shorter charging
+  interval while it is charging. Changes apply immediately without a reload and are stored in the
+  entry options. New option "Polling interval while charging" (default 5 min) sets the default.
+- A command now refreshes only the vehicle it was sent to.
 
 ## [0.3.0]
 

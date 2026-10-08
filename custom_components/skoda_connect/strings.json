@@ -35,6 +35,7 @@
         "title": "Škoda Connect options",
         "data": {
           "scan_interval": "Polling interval (minutes)",
+          "charging_scan_interval": "Polling interval while charging (minutes)",
           "read_only": "Read-only mode (disable all remote controls)"
         }
       }
@@ -127,8 +128,11 @@
       "charge_limit": {
         "name": "Charge limit"
       },
-      "poll_interval": {
+      "poll_interval_idle": {
         "name": "Polling interval"
+      },
+      "poll_interval_charging": {
+        "name": "Polling interval while charging"
       }
     },
     "select": {

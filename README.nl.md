@@ -20,7 +20,7 @@ externe client-bibliotheek.
 | `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
 | `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
 | `switch` | Laden starten/stoppen |
-| `number` | Laadlimiet (doel-laadniveau), pollinginterval (5-120 min, direct actief) |
+| `number` | Laadlimiet (doel-laadniveau), pollinginterval per voertuig (normaal / tijdens laden) |
 | `select` | Laadmodus |
 
 Sensoren en bediening worden alleen aangemaakt voor de gegevens en acties die jouw voertuig
@@ -93,12 +93,21 @@ De integratie gebruikt uitsluitend de gedocumenteerde endpoints onder
 `https://public.api.connect.skoda-auto.cz/api/v1/vehicles/{vin}` en authenticeert met de
 `X-API-Key`-header.
 
+### Pollinginterval per voertuig
+
+Elk voertuig heeft twee `number`-entiteiten (configuratie): **Pollinginterval** en **Pollinginterval
+tijdens laden**. Ze overschrijven de standaardwaarden uit de opties, werken direct zonder herladen
+en zijn via automatiseringen in te stellen (`number.set_value`). Zodra de laatst opgehaalde status
+`CHARGING` is, wordt het laadinterval gebruikt; na het starten van het laden kan het dus tot één
+normaal interval duren voordat het sneller pollen begint (laden starten via Home Assistant ververst
+na 30 seconden meteen).
+
 ### Rate limits
 
 De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). Een poll kost
 één verzoek per voertuig, elk commando nog één. Daarom:
 
-- is het standaardinterval 10 minuten (minimaal 5);
+- is het standaardinterval 10 minuten (minimaal 5) en 5 minuten tijdens het laden;
 - wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
 - worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd (`Retry-After`, minimaal
   15 minuten, maximaal 1 uur);

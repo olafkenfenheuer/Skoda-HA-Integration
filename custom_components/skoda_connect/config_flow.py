@@ -26,8 +26,10 @@ from .api import SkodaApi, SkodaApiError, SkodaAuthError, SkodaRateLimitError
 from .const import (
     API_KEYS_URL,
     CONF_API_KEY,
+    CONF_CHARGING_SCAN_INTERVAL,
     CONF_READ_ONLY,
     CONF_VINS,
+    DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DOMAIN,
     MAX_SCAN_INTERVAL_MINUTES,
@@ -178,12 +180,16 @@ class SkodaConnectOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage polling interval and read-only mode."""
+        """Manage polling intervals and read-only mode."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            # Keep the per-vehicle overrides, which are edited via number entities.
+            return self.async_create_entry(data={**self.config_entry.options, **user_input})
 
         current_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+        )
+        current_charging = self.config_entry.options.get(
+            CONF_CHARGING_SCAN_INTERVAL, DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES
         )
         current_read_only = self.config_entry.options.get(CONF_READ_ONLY, False)
 
@@ -191,6 +197,16 @@ class SkodaConnectOptionsFlow(OptionsFlow):
             {
                 vol.Required(
                     CONF_SCAN_INTERVAL, default=current_interval
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_SCAN_INTERVAL_MINUTES,
+                        max=MAX_SCAN_INTERVAL_MINUTES,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="min",
+                    )
+                ),
+                vol.Required(
+                    CONF_CHARGING_SCAN_INTERVAL, default=current_charging
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_SCAN_INTERVAL_MINUTES,
