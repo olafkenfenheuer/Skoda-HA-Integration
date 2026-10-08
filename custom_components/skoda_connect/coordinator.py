@@ -4,68 +4,46 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
-from email.utils import parsedate_to_datetime
+from datetime import timedelta
 
-from aiohttp import ClientResponseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from myskoda import AuthorizationFailedError, MySkoda, Vehicle
-
-from .const import DOMAIN
+from .api import (
+    SkodaApi,
+    SkodaApiError,
+    SkodaAuthError,
+    SkodaRateLimitError,
+    SkodaVehicle,
+)
+from .const import DOMAIN, POST_COMMAND_REFRESH_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
-# The public MySkoda API enforces a strict per-account request quota and responds
-# with HTTP 429 (and, in the wild, the non-standard 430) once it is exceeded. The
-# myskoda client itself does not retry or back off on this, so the coordinator has
-# to do so explicitly to avoid hammering the API and risking an account lockout.
-RATE_LIMIT_STATUS_CODES = (429, 430)
 MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
 MAX_RATE_LIMIT_BACKOFF = timedelta(hours=1)
 
 
 @dataclass
 class SkodaData:
-    """Container for all vehicles known to the account."""
+    """Container for all configured vehicles."""
 
-    vehicles: dict[str, Vehicle] = field(default_factory=dict)
-
-
-def _parse_retry_after(value: str | None) -> timedelta | None:
-    """Parse a Retry-After header into a timedelta.
-
-    The header may either be a number of seconds, or an HTTP-date. Returns None if
-    the value is missing or cannot be parsed.
-    """
-    if not value:
-        return None
-    value = value.strip()
-    try:
-        return timedelta(seconds=int(value))
-    except ValueError:
-        pass
-    try:
-        retry_at = parsedate_to_datetime(value)
-    except (TypeError, ValueError):
-        return None
-    if retry_at.tzinfo is None:
-        retry_at = retry_at.replace(tzinfo=UTC)
-    return retry_at - datetime.now(UTC)
+    vehicles: dict[str, SkodaVehicle] = field(default_factory=dict)
 
 
 class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
-    """Coordinator that polls the MySkoda API for every vehicle on the account."""
+    """Coordinator that polls the MyŠkoda Public API for every configured vehicle."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: SkodaConfigEntry,
-        myskoda: MySkoda,
+        api: SkodaApi,
         vins: list[str],
         update_interval: timedelta,
     ) -> None:
@@ -77,44 +55,89 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
             name=DOMAIN,
             update_interval=update_interval,
         )
-        self.myskoda = myskoda
+        self.api = api
         self.vins = vins
         self.read_only = False
+        self._cancel_refresh: CALLBACK_TYPE | None = None
 
     async def _async_update_data(self) -> SkodaData:
         """Fetch the latest data for every vehicle from the cloud API."""
-        try:
-            vehicles = await asyncio.gather(
-                *(self.myskoda.get_vehicle(vin) for vin in self.vins)
-            )
-        except AuthorizationFailedError as err:
-            raise ConfigEntryAuthFailed("Authentication with Škoda Connect failed") from err
-        except ClientResponseError as err:
-            if err.status in RATE_LIMIT_STATUS_CODES:
-                backoff = self._rate_limit_backoff(err)
+        results = await asyncio.gather(
+            *(self.api.get_vehicle(vin) for vin in self.vins), return_exceptions=True
+        )
+
+        vehicles: dict[str, SkodaVehicle] = {}
+        failures: list[Exception] = []
+        for vin, result in zip(self.vins, results, strict=True):
+            if isinstance(result, SkodaAuthError):
+                raise ConfigEntryAuthFailed(str(result)) from result
+            if isinstance(result, SkodaRateLimitError):
+                backoff = self._rate_limit_backoff(result)
                 _LOGGER.warning(
-                    "Škoda Connect API rate limit hit (HTTP %s); pausing polling "
-                    "for %s before trying again",
-                    err.status,
-                    backoff,
+                    "Škoda Connect API rate limit hit; pausing polling for %s", backoff
                 )
                 raise UpdateFailed(
                     "Škoda Connect API rate limit reached; backing off",
                     retry_after=backoff.total_seconds(),
-                ) from err
-            raise UpdateFailed(f"Error communicating with Škoda Connect API: {err}") from err
-        except Exception as err:  # noqa: BLE001 - the underlying client raises plain Exceptions
-            raise UpdateFailed(f"Error communicating with Škoda Connect API: {err}") from err
+                ) from result
+            if isinstance(result, Exception):
+                failures.append(result)
+                # Keep the last known state for a vehicle whose request failed.
+                if self.data and vin in self.data.vehicles:
+                    vehicles[vin] = self.data.vehicles[vin]
+                continue
+            vehicles[vin] = result
 
-        return SkodaData(vehicles={vehicle.info.vin: vehicle for vehicle in vehicles})
+        if failures and not vehicles:
+            raise UpdateFailed(
+                f"Error communicating with Škoda Connect API: {failures[0]}"
+            ) from failures[0]
+        for failure in failures:
+            _LOGGER.warning("Could not update a vehicle: %s", failure)
+        return SkodaData(vehicles=vehicles)
 
     @staticmethod
-    def _rate_limit_backoff(err: ClientResponseError) -> timedelta:
-        """Compute how long to pause polling for after being rate limited."""
-        retry_after = _parse_retry_after(err.headers.get("Retry-After") if err.headers else None)
-        backoff = retry_after if retry_after is not None else MIN_RATE_LIMIT_BACKOFF
-        backoff = max(backoff, MIN_RATE_LIMIT_BACKOFF)
-        return min(backoff, MAX_RATE_LIMIT_BACKOFF)
+    def _rate_limit_backoff(err: SkodaRateLimitError) -> timedelta:
+        backoff = err.retry_after if err.retry_after is not None else MIN_RATE_LIMIT_BACKOFF
+        return min(max(backoff, MIN_RATE_LIMIT_BACKOFF), MAX_RATE_LIMIT_BACKOFF)
+
+    async def async_command(self, command: Awaitable[None]) -> None:
+        """Run a remote command and schedule a single follow-up refresh.
+
+        Commands count against the same request quota as polling, so instead of
+        refreshing after every call this waits a moment for the vehicle and refreshes once.
+        """
+        if self.read_only:
+            command.close()  # type: ignore[attr-defined]
+            raise HomeAssistantError(
+                "Škoda Connect is configured in read-only mode; disable it in the "
+                "integration options to use this control"
+            )
+        try:
+            await command
+        except SkodaAuthError as err:
+            raise HomeAssistantError(f"The API key was rejected: {err}") from err
+        except SkodaRateLimitError as err:
+            raise HomeAssistantError(f"Škoda Connect API rate limit reached: {err}") from err
+        except SkodaApiError as err:
+            raise HomeAssistantError(f"The vehicle did not accept the request: {err}") from err
+
+        if self._cancel_refresh:
+            self._cancel_refresh()
+        self._cancel_refresh = async_call_later(
+            self.hass, POST_COMMAND_REFRESH_DELAY, self._async_delayed_refresh
+        )
+
+    async def _async_delayed_refresh(self, _now) -> None:
+        self._cancel_refresh = None
+        await self.async_request_refresh()
+
+    async def async_shutdown(self) -> None:
+        """Cancel any pending follow-up refresh."""
+        if self._cancel_refresh:
+            self._cancel_refresh()
+            self._cancel_refresh = None
+        await super().async_shutdown()
 
 
 # Generic alias used to type-annotate config entries for this integration.

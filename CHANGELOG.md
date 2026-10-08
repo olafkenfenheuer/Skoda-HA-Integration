@@ -5,6 +5,31 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0]
+
+### Changed
+
+- **Migrated to the official MyŠkoda Public API**
+  (<https://public.api.connect.skoda-auto.cz/docs>). Authentication now uses an API key created
+  in the MyŠkoda app instead of email and password, and the `myskoda` Python dependency was
+  removed. Existing entries ask for reauthentication to enter an API key and the VIN(s).
+- Polling now costs one request per vehicle (was 10-13). Default interval is 10 minutes
+  (minimum 5) because the API allows 20 requests per hour and VIN.
+- Remote commands no longer trigger an immediate refresh; one refresh follows 30 seconds
+  after the last command.
+- The vehicle lock is now a read-only `binary_sensor` (`unlocked`).
+
+### Added
+
+- `select` entity for the charge mode.
+- Diagnostics redact the API key, VINs, license plate, position and address.
+
+### Removed
+
+- Features without a public API endpoint: lock/unlock (and the S-PIN option), honk & flash,
+  flash, wake up, window heating switch, battery care mode switch, reduced charging current
+  switch, outside temperature and software version sensors.
+
 ## [0.2.0]
 
 ### Added

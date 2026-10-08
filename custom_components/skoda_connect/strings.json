@@ -2,30 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect your Škoda Connect account",
-        "description": "Enter the credentials you use to sign in to the MySkoda app.",
+        "title": "Connect your Škoda account",
+        "description": "Create an API key in the MyŠkoda app ({api_keys_url}) and enter it together with the VIN of each vehicle it was created for (separate several VINs with commas).",
         "data": {
-          "email": "Email address",
-          "password": "Password",
-          "spin": "S-PIN (optional, required to lock/unlock)"
+          "api_key": "API key",
+          "vins": "VIN(s)"
         }
       },
       "reauth_confirm": {
-        "title": "Reauthenticate Škoda Connect",
-        "description": "Your Škoda Connect session for {email} has expired. Please enter your password again.",
+        "title": "Update the Škoda Connect API key",
+        "description": "Škoda Connect now uses an API key instead of your login. Create one in the MyŠkoda app ({api_keys_url}) and enter it with the VIN(s) of your vehicle(s).",
         "data": {
-          "password": "Password"
+          "api_key": "API key",
+          "vins": "VIN(s)"
         }
       }
     },
     "error": {
-      "invalid_auth": "Invalid email or password.",
+      "invalid_auth": "The API key is invalid, expired or not authorized for this vehicle.",
+      "invalid_vin": "Enter valid 17-character VINs, separated by commas.",
       "cannot_connect": "Could not connect to Škoda Connect. Please try again later.",
-      "no_vehicles": "No vehicles were found on this account.",
       "rate_limited": "Škoda Connect API rate limit reached. Please wait a while before trying again."
     },
     "abort": {
-      "already_configured": "This account is already configured.",
+      "already_configured": "This vehicle selection is already configured.",
       "reauth_successful": "Reauthentication was successful."
     }
   },
@@ -42,53 +42,96 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": { "name": "Battery level" },
-      "charge_power": { "name": "Charging power" },
-      "charging_rate": { "name": "Charging rate" },
-      "remaining_charging_time": { "name": "Remaining charging time" },
-      "battery_range": { "name": "Battery range" },
-      "total_range": { "name": "Total range" },
-      "fuel_level": { "name": "Fuel level" },
-      "ad_blue_range": { "name": "AdBlue range" },
-      "mileage": { "name": "Mileage" },
-      "outside_temperature": { "name": "Outside temperature" },
-      "target_temperature": { "name": "Target temperature" },
-      "software_version": { "name": "Software version" },
-      "location_address": { "name": "Address" },
-      "charging_location_profile": { "name": "Charging location" }
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "charge_power": {
+        "name": "Charging power"
+      },
+      "charging_rate": {
+        "name": "Charging rate"
+      },
+      "remaining_charging_time": {
+        "name": "Remaining charging time"
+      },
+      "battery_range": {
+        "name": "Battery range"
+      },
+      "total_range": {
+        "name": "Total range"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "ad_blue_range": {
+        "name": "AdBlue range"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "location_address": {
+        "name": "Address"
+      },
+      "charging_location_profile": {
+        "name": "Charging location"
+      }
     },
     "binary_sensor": {
-      "doors_open": { "name": "Doors" },
-      "windows_open": { "name": "Windows" },
-      "trunk_open": { "name": "Trunk" },
-      "bonnet_open": { "name": "Bonnet" },
-      "lights_on": { "name": "Lights" },
-      "charging": { "name": "Charging" },
-      "plugged_in": { "name": "Charging cable" },
-      "vehicle_in_saved_location": { "name": "At saved charging location" }
-    },
-    "lock": {
-      "vehicle_lock": { "name": "Vehicle" }
+      "doors_open": {
+        "name": "Doors"
+      },
+      "windows_open": {
+        "name": "Windows"
+      },
+      "trunk_open": {
+        "name": "Trunk"
+      },
+      "bonnet_open": {
+        "name": "Bonnet"
+      },
+      "lights_on": {
+        "name": "Lights"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "plugged_in": {
+        "name": "Charging cable"
+      },
+      "vehicle_in_saved_location": {
+        "name": "At saved charging location"
+      },
+      "unlocked": {
+        "name": "Central locking"
+      }
     },
     "device_tracker": {
-      "vehicle_location": { "name": "Location" }
+      "vehicle_location": {
+        "name": "Location"
+      }
     },
     "climate": {
-      "air_conditioning": { "name": "Air conditioning" }
+      "air_conditioning": {
+        "name": "Air conditioning"
+      }
     },
     "switch": {
-      "window_heating": { "name": "Window heating" },
-      "charging": { "name": "Charging" },
-      "battery_care_mode": { "name": "Battery care mode" },
-      "reduced_charging_current": { "name": "Reduced charging current" }
-    },
-    "button": {
-      "honk_and_flash": { "name": "Honk and flash" },
-      "flash": { "name": "Flash lights" },
-      "wakeup": { "name": "Wake up vehicle" }
+      "charging": {
+        "name": "Charging"
+      }
     },
     "number": {
-      "charge_limit": { "name": "Charge limit" }
+      "charge_limit": {
+        "name": "Charge limit"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode"
+      }
     }
   }
 }

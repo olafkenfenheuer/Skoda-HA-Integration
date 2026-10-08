@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    EntityCategory,
     UnitOfLength,
     UnitOfPower,
     UnitOfSpeed,
@@ -23,9 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from myskoda import Vehicle
-from myskoda.models.position import PositionType
-
+from .api import SkodaVehicle as Vehicle
 from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
 
@@ -38,91 +35,45 @@ class SkodaSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[Vehicle], bool] = lambda vehicle: True
 
 
-def _charging_battery_percent(vehicle: Vehicle) -> StateType:
-    return vehicle.charging.status.battery.state_of_charge_in_percent
-
-
-def _charge_power(vehicle: Vehicle) -> StateType:
-    return vehicle.charging.status.charge_power_in_kw
-
-
-def _charging_rate(vehicle: Vehicle) -> StateType:
-    return vehicle.charging.status.charging_rate_in_kilometers_per_hour
-
-
-def _remaining_charge_time(vehicle: Vehicle) -> StateType:
-    return vehicle.charging.status.remaining_time_to_fully_charged_in_minutes
+def _battery_percent(vehicle: Vehicle) -> StateType:
+    value = vehicle.get("charging", "status", "battery", "stateOfChargeInPercent")
+    if value is None:
+        for engine in ("primaryEngineRange", "secondaryEngineRange"):
+            if vehicle.get("fuelStatus", engine, "engineType") == "ELECTRIC":
+                return vehicle.get("fuelStatus", engine, "currentSoCInPercent")
+    return value
 
 
 def _battery_range_km(vehicle: Vehicle) -> StateType:
-    meters = vehicle.charging.status.battery.remaining_cruising_range_in_meters
+    meters = vehicle.get("charging", "status", "battery", "remainingCruisingRangeInMeters")
     return None if meters is None else round(meters / 1000)
 
 
-def _total_range_km(vehicle: Vehicle) -> StateType:
-    return vehicle.driving_range.total_range_in_km
-
-
 def _fuel_level(vehicle: Vehicle) -> StateType:
-    return vehicle.driving_range.primary_engine_range.current_fuel_level_in_percent
+    for engine in ("primaryEngineRange", "secondaryEngineRange"):
+        value = vehicle.get("fuelStatus", engine, "currentFuelLevelInPercent")
+        if value is not None:
+            return value
+    return None
 
 
-def _ad_blue_range(vehicle: Vehicle) -> StateType:
-    return vehicle.driving_range.ad_blue_range
+def _path(*path: str) -> Callable[[Vehicle], StateType]:
+    return lambda vehicle: vehicle.get(*path)
 
 
-def _mileage(vehicle: Vehicle) -> StateType:
-    return vehicle.health.mileage_in_km
-
-
-def _outside_temperature(vehicle: Vehicle) -> StateType:
-    return vehicle.air_conditioning.outside_temperature.temperature_value
-
-
-def _target_temperature(vehicle: Vehicle) -> StateType:
-    return vehicle.air_conditioning.target_temperature.temperature_value
-
-
-def _software_version(vehicle: Vehicle) -> StateType:
-    return vehicle.info.software_version
-
-
-def _location_address(vehicle: Vehicle) -> StateType:
-    """Return a human-readable address for the vehicle's last known location."""
-    try:
-        for position in vehicle.positions.positions:
-            if position.type == PositionType.VEHICLE and position.address:
-                addr = position.address
-                line1 = " ".join(p for p in (addr.street, addr.house_number) if p)
-                line2 = " ".join(p for p in (addr.zip_code, addr.city) if p)
-                return ", ".join(p for p in (line1, line2, addr.country) if p) or None
-    except (AttributeError, TypeError):
-        pass
-    try:
-        return vehicle.parking_position.parking_position.formatted_address
-    except AttributeError:
-        return None
-
-
-def _at_saved_charging_location(vehicle: Vehicle) -> bool:
-    """Return whether the vehicle is currently at one of its saved charging locations."""
-    return bool(
-        vehicle.charging is not None
-        and vehicle.charging.is_vehicle_in_saved_location
-        and vehicle.charging_profiles is not None
-        and vehicle.charging_profiles.current_vehicle_position_profile is not None
-    )
+def _exists(*path: str) -> Callable[[Vehicle], bool]:
+    return lambda vehicle: vehicle.has(*path)
 
 
 def _charging_location_profile(vehicle: Vehicle) -> StateType:
     """Return the name of the saved charging location the vehicle is currently at.
 
     Only meaningful while the vehicle is actually at a saved location -
-    ``current_vehicle_position_profile`` can otherwise still carry a stale name.
+    ``currentVehiclePositionProfile`` can otherwise still carry a stale name.
     """
-    if not _at_saved_charging_location(vehicle):
+    if not vehicle.get("charging", "isVehicleInSavedLocation"):
         return None
-    return vehicle.charging_profiles.current_vehicle_position_profile.name
+    return vehicle.get("chargingProfiles", "currentVehiclePositionProfile", "name")
 
 
 SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
@@ -132,8 +83,8 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=_charging_battery_percent,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        value_fn=_battery_percent,
+        exists_fn=lambda v: _battery_percent(v) is not None,
     ),
     SkodaSensorEntityDescription(
         key="charge_power",
@@ -141,24 +92,24 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=_charge_power,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        value_fn=_path("charging", "status", "chargePowerInKw"),
+        exists_fn=_exists("charging", "status"),
     ),
     SkodaSensorEntityDescription(
         key="charging_rate",
         translation_key="charging_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=_charging_rate,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        value_fn=_path("charging", "status", "chargingRateInKilometersPerHour"),
+        exists_fn=_exists("charging", "status"),
     ),
     SkodaSensorEntityDescription(
         key="remaining_charging_time",
         translation_key="remaining_charging_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement="min",
-        value_fn=_remaining_charge_time,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        value_fn=_path("charging", "status", "remainingTimeToFullyChargedInMinutes"),
+        exists_fn=_exists("charging", "status"),
     ),
     SkodaSensorEntityDescription(
         key="battery_range",
@@ -167,7 +118,7 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value_fn=_battery_range_km,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        exists_fn=lambda v: _battery_range_km(v) is not None,
     ),
     SkodaSensorEntityDescription(
         key="total_range",
@@ -175,8 +126,8 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=_total_range_km,
-        exists_fn=lambda v: v.driving_range is not None,
+        value_fn=_path("fuelStatus", "totalRangeInKm"),
+        exists_fn=_exists("fuelStatus", "totalRangeInKm"),
     ),
     SkodaSensorEntityDescription(
         key="fuel_level",
@@ -184,8 +135,7 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=_fuel_level,
-        exists_fn=lambda v: v.driving_range is not None
-        and v.driving_range.primary_engine_range.current_fuel_level_in_percent is not None,
+        exists_fn=lambda v: _fuel_level(v) is not None,
     ),
     SkodaSensorEntityDescription(
         key="ad_blue_range",
@@ -193,9 +143,8 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=_ad_blue_range,
-        exists_fn=lambda v: v.driving_range is not None
-        and v.driving_range.ad_blue_range is not None,
+        value_fn=_path("fuelStatus", "adBlueRange"),
+        exists_fn=_exists("fuelStatus", "adBlueRange"),
     ),
     SkodaSensorEntityDescription(
         key="mileage",
@@ -203,18 +152,8 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=_mileage,
-        exists_fn=lambda v: v.health is not None,
-    ),
-    SkodaSensorEntityDescription(
-        key="outside_temperature",
-        translation_key="outside_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=_outside_temperature,
-        exists_fn=lambda v: v.air_conditioning is not None
-        and v.air_conditioning.outside_temperature is not None,
+        value_fn=_path("odometer", "mileageInKm"),
+        exists_fn=_exists("odometer", "mileageInKm"),
     ),
     SkodaSensorEntityDescription(
         key="target_temperature",
@@ -222,31 +161,22 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
-        value_fn=_target_temperature,
-        exists_fn=lambda v: v.air_conditioning is not None
-        and v.air_conditioning.target_temperature is not None,
-    ),
-    SkodaSensorEntityDescription(
-        key="software_version",
-        translation_key="software_version",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=_software_version,
-        exists_fn=lambda v: v.info.software_version is not None,
+        value_fn=_path("airConditioning", "targetTemperature", "value"),
+        exists_fn=_exists("airConditioning", "targetTemperature", "value"),
     ),
     SkodaSensorEntityDescription(
         key="location_address",
         translation_key="location_address",
         icon="mdi:map-marker",
-        value_fn=_location_address,
-        exists_fn=lambda v: _location_address(v) is not None,
+        value_fn=_path("parkingPosition", "formattedAddress"),
+        exists_fn=_exists("parkingPosition", "formattedAddress"),
     ),
     SkodaSensorEntityDescription(
         key="charging_location_profile",
         translation_key="charging_location_profile",
         icon="mdi:map-marker-radius",
         value_fn=_charging_location_profile,
-        exists_fn=lambda v: v.charging_profiles is not None,
+        exists_fn=_exists("chargingProfiles"),
     ),
 )
 
@@ -287,5 +217,5 @@ class SkodaSensor(SkodaVehicleEntity, SensorEntity):
         """Return the current value, tolerating missing upstream data."""
         try:
             return self.entity_description.value_fn(self.vehicle)
-        except (AttributeError, KeyError, TypeError):
+        except (KeyError, TypeError):
             return None

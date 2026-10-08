@@ -6,16 +6,24 @@ from typing import Final
 
 DOMAIN: Final = "skoda_connect"
 
-CONF_SPIN: Final = "spin"
+API_BASE_URL: Final = "https://public.api.connect.skoda-auto.cz"
+API_KEYS_URL: Final = "https://go.skoda.eu/api-keys"
+
+CONF_API_KEY: Final = "api_key"
+CONF_VINS: Final = "vins"
 CONF_READ_ONLY: Final = "read_only"
 
-# Each poll fetches ~10-13 separate endpoints per vehicle (info, maintenance, and one
-# request per reported capability), and the public API enforces a strict per-account
-# request quota. MIN_SCAN_INTERVAL_MINUTES is a hard floor so the options flow can't be
-# set to a value that all but guarantees rate limiting - see the "Notes on the API"
-# section in the README before lowering it further.
-DEFAULT_SCAN_INTERVAL_MINUTES: Final = 15
-MIN_SCAN_INTERVAL_MINUTES: Final = 15
+# The public API allows 20 requests per hour and VIN (the limit is documented as not
+# final), and every command counts against the same quota. One poll costs a single
+# request per vehicle, so 10 minutes leaves roughly half of the quota for commands.
+# MIN_SCAN_INTERVAL_MINUTES is a hard floor so the options flow can't be set to a value
+# that all but guarantees rate limiting.
+DEFAULT_SCAN_INTERVAL_MINUTES: Final = 10
+MIN_SCAN_INTERVAL_MINUTES: Final = 5
 MAX_SCAN_INTERVAL_MINUTES: Final = 1440
+
+# Commands are accepted asynchronously (HTTP 202); refresh once shortly afterwards so the
+# new state shows up without waiting for the next poll.
+POST_COMMAND_REFRESH_DELAY: Final = 30
 
 MANUFACTURER: Final = "Škoda"

@@ -2,31 +2,31 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connecter votre compte Škoda Connect",
-        "description": "Saisissez les identifiants que vous utilisez dans l'application MySkoda.",
+        "title": "Connecter votre compte Škoda",
+        "description": "Créez une clé API dans l'application MyŠkoda ({api_keys_url}) et saisissez-la avec le VIN de chaque véhicule concerné (séparez plusieurs VIN par des virgules).",
         "data": {
-          "email": "Adresse e-mail",
-          "password": "Mot de passe",
-          "spin": "Code S-PIN (facultatif, requis pour verrouiller/déverrouiller)"
+          "api_key": "Clé API",
+          "vins": "VIN"
         }
       },
       "reauth_confirm": {
-        "title": "Reconnexion à Škoda Connect",
-        "description": "Votre session Škoda Connect pour {email} a expiré. Veuillez saisir à nouveau votre mot de passe.",
+        "title": "Mettre à jour la clé API Škoda Connect",
+        "description": "Škoda Connect utilise désormais une clé API au lieu de vos identifiants. Créez-en une dans l'application MyŠkoda ({api_keys_url}) et saisissez-la avec le(s) VIN de vos véhicules.",
         "data": {
-          "password": "Mot de passe"
+          "api_key": "Clé API",
+          "vins": "VIN"
         }
       }
     },
     "error": {
-      "invalid_auth": "Adresse e-mail ou mot de passe invalide.",
+      "invalid_auth": "La clé API est invalide, expirée ou non autorisée pour ce véhicule.",
+      "invalid_vin": "Saisissez des VIN valides de 17 caractères, séparés par des virgules.",
       "cannot_connect": "Impossible de se connecter à Škoda Connect. Veuillez réessayer plus tard.",
-      "no_vehicles": "Aucun véhicule n'a été trouvé sur ce compte.",
       "rate_limited": "La limite de requêtes de l'API Škoda Connect est atteinte. Veuillez patienter avant de réessayer."
     },
     "abort": {
-      "already_configured": "Ce compte est déjà configuré.",
-      "reauth_successful": "La reconnexion a réussi."
+      "already_configured": "Cette sélection de véhicules est déjà configurée.",
+      "reauth_successful": "La réauthentification a réussi."
     }
   },
   "options": {
@@ -42,53 +42,96 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": { "name": "Niveau de batterie" },
-      "charge_power": { "name": "Puissance de charge" },
-      "charging_rate": { "name": "Vitesse de charge" },
-      "remaining_charging_time": { "name": "Temps de charge restant" },
-      "battery_range": { "name": "Autonomie batterie" },
-      "total_range": { "name": "Autonomie totale" },
-      "fuel_level": { "name": "Niveau de carburant" },
-      "ad_blue_range": { "name": "Autonomie AdBlue" },
-      "mileage": { "name": "Kilométrage" },
-      "outside_temperature": { "name": "Température extérieure" },
-      "target_temperature": { "name": "Température cible" },
-      "software_version": { "name": "Version du logiciel" },
-      "location_address": { "name": "Adresse" },
-      "charging_location_profile": { "name": "Lieu de charge" }
+      "battery_level": {
+        "name": "Niveau de batterie"
+      },
+      "charge_power": {
+        "name": "Puissance de charge"
+      },
+      "charging_rate": {
+        "name": "Vitesse de charge"
+      },
+      "remaining_charging_time": {
+        "name": "Temps de charge restant"
+      },
+      "battery_range": {
+        "name": "Autonomie batterie"
+      },
+      "total_range": {
+        "name": "Autonomie totale"
+      },
+      "fuel_level": {
+        "name": "Niveau de carburant"
+      },
+      "ad_blue_range": {
+        "name": "Autonomie AdBlue"
+      },
+      "mileage": {
+        "name": "Kilométrage"
+      },
+      "target_temperature": {
+        "name": "Température cible"
+      },
+      "location_address": {
+        "name": "Adresse"
+      },
+      "charging_location_profile": {
+        "name": "Lieu de charge"
+      }
     },
     "binary_sensor": {
-      "doors_open": { "name": "Portes" },
-      "windows_open": { "name": "Fenêtres" },
-      "trunk_open": { "name": "Coffre" },
-      "bonnet_open": { "name": "Capot" },
-      "lights_on": { "name": "Éclairage" },
-      "charging": { "name": "En charge" },
-      "plugged_in": { "name": "Câble de charge" },
-      "vehicle_in_saved_location": { "name": "Sur un lieu de charge enregistré" }
-    },
-    "lock": {
-      "vehicle_lock": { "name": "Véhicule" }
+      "doors_open": {
+        "name": "Portes"
+      },
+      "windows_open": {
+        "name": "Fenêtres"
+      },
+      "trunk_open": {
+        "name": "Coffre"
+      },
+      "bonnet_open": {
+        "name": "Capot"
+      },
+      "lights_on": {
+        "name": "Éclairage"
+      },
+      "charging": {
+        "name": "En charge"
+      },
+      "plugged_in": {
+        "name": "Câble de charge"
+      },
+      "vehicle_in_saved_location": {
+        "name": "Sur un lieu de charge enregistré"
+      },
+      "unlocked": {
+        "name": "Verrouillage centralisé"
+      }
     },
     "device_tracker": {
-      "vehicle_location": { "name": "Localisation" }
+      "vehicle_location": {
+        "name": "Localisation"
+      }
     },
     "climate": {
-      "air_conditioning": { "name": "Climatisation" }
+      "air_conditioning": {
+        "name": "Climatisation"
+      }
     },
     "switch": {
-      "window_heating": { "name": "Dégivrage des vitres" },
-      "charging": { "name": "Charge" },
-      "battery_care_mode": { "name": "Mode préservation de la batterie" },
-      "reduced_charging_current": { "name": "Courant de charge réduit" }
-    },
-    "button": {
-      "honk_and_flash": { "name": "Klaxon et appel de phares" },
-      "flash": { "name": "Appel de phares" },
-      "wakeup": { "name": "Réveiller le véhicule" }
+      "charging": {
+        "name": "Charge"
+      }
     },
     "number": {
-      "charge_limit": { "name": "Limite de charge" }
+      "charge_limit": {
+        "name": "Limite de charge"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Mode de charge"
+      }
     }
   }
 }
