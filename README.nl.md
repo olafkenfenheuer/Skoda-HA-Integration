@@ -3,39 +3,36 @@
 [🇬🇧 English](README.md) | [🇳🇱 Nederlands](README.nl.md)
 
 Een meertalige [Home Assistant](https://www.home-assistant.io/) custom integration voor
-Škoda-voertuigen, gebouwd op de officiële publieke MySkoda API
-([public.api.connect.skoda-auto.cz](https://public.api.connect.skoda-auto.cz/docs)) via de
-actief onderhouden [`myskoda`](https://github.com/skodaconnect/myskoda) Python-client.
+Škoda-voertuigen, gebouwd op de officiële
+[MyŠkoda Public API](https://public.api.connect.skoda-auto.cz/docs). De integratie praat
+rechtstreeks met de API via een **API-sleutel** - geen gebruikersnaam/wachtwoord en geen
+externe client-bibliotheek.
 
 > **Niet-officieel project.** Deze integratie is niet verbonden met, onderschreven door, of
-> geassocieerd met Škoda Auto. Ze gebruikt dezelfde publieke API als de officiële MySkoda-app.
-> Gebruik op eigen risico.
+> geassocieerd met Škoda Auto. Gebruik op eigen risico.
 
 ## Functies
 
-Gebouwd volgens de huidige best practices voor Home Assistant-integraties: een config flow die
-volledig via de UI werkt, een `DataUpdateCoordinator` voor efficiënte polling,
-entity-descriptions, vertalingen per entiteit, een opties-flow, ondersteuning voor
-opnieuw-aanmelden, en een diagnostics-download.
-
 | Platform | Entiteiten |
 |---|---|
-| `sensor` | Batterijniveau, laadvermogen, laadsnelheid, resterende laadtijd, actieradius (batterij/totaal), brandstofniveau, AdBlue-bereik, kilometerstand, buiten-/doeltemperatuur, softwareversie, adres van de laatst bekende locatie, naam van het momenteel actieve laadlocatieprofiel |
-| `binary_sensor` | Portieren, ramen, kofferbak, motorkap, verlichting, aan het laden, laadkabel aangesloten, voertuig bij opgeslagen laadlocatie |
-| `lock` | Centrale vergrendeling (vereist S-PIN) |
-| `device_tracker` | Laatst bekende GPS-locatie van het voertuig (zichtbaar op de Kaart-dashboardkaart) |
-| `climate` | Airconditioning op afstand (aan/uit, ventilatie, doeltemperatuur) |
-| `switch` | Ruitverwarming, laden, batterijbeschermingsmodus, verminderde laadstroom |
-| `button` | Claxon en knipperlichten, lichten laten knipperen, voertuig wekken |
-| `number` | AC-laadlimiet (state of charge) |
+| `sensor` | Accuniveau, laadvermogen, laadsnelheid, resterende laadtijd, accu-/totaalbereik, brandstofniveau, AdBlue-bereik, kilometerstand, doeltemperatuur, adres van de parkeerpositie, naam van het actieve laadlocatieprofiel |
+| `binary_sensor` | Deuren, ramen, kofferbak, motorkap, verlichting, centrale vergrendeling, laden, laadkabel aangesloten, voertuig op opgeslagen laadlocatie |
+| `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
+| `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
+| `switch` | Laden starten/stoppen |
+| `number` | Laadlimiet (doel-laadniveau) |
+| `select` | Laadmodus |
 
-Sensoren en bedieningselementen worden alleen aangemaakt voor data die jouw specifieke voertuig
-ook daadwerkelijk levert. De entiteitenlijst past zich dus automatisch aan de mogelijkheden van
-je auto aan (elektrisch, plug-in hybride, of verbrandingsmotor).
+Sensoren en bediening worden alleen aangemaakt voor de gegevens en acties die jouw voertuig
+meldt. In de opties kun je de **alleen-lezen-modus** inschakelen om alle bediening uit te
+zetten.
 
-Er is een **alleen-lezen modus** die je in de opties van de integratie kunt inschakelen om alle
-bedieningsfuncties (vergrendelen, klimaatregeling, laden, knoppen) uit te schakelen, terwijl alle
-sensoren actief blijven.
+### Wat de publieke API niet biedt
+
+Ten opzichte van eerdere versies (die de private app-API gebruikten) zijn vergrendelen/
+ontgrendelen, toeteren & knipperen, voertuig wakker maken, ruitverwarming, accuzorgmodus,
+gereduceerde laadstroom, buitentemperatuur en softwareversie vervallen: de publieke API heeft
+daarvoor geen endpoint. De vergrendeling is nu een alleen-lezen `binary_sensor`.
 
 ## Ondersteunde talen
 
@@ -75,50 +72,37 @@ Ook deze documentatie is beschikbaar in het [Engels](README.md) en het
 
 ## Configuratie
 
-1. Ga naar **Instellingen → Apparaten en diensten → Integratie toevoegen** en zoek naar
-   "Škoda Connect".
-2. Vul het e-mailadres en wachtwoord in dat je ook gebruikt in de MySkoda-app.
-3. Vul optioneel je S-PIN in — dit is nodig om de vergrendel-entiteit te kunnen gebruiken.
-4. Home Assistant controleert de inloggegevens en maakt bij succes één apparaat aan per
-   voertuig op het account, met alle van toepassing zijnde entiteiten.
-5. Open na het instellen het **Configureren**-dialoogvenster van de integratie om het
-   vernieuwingsinterval aan te passen (15–1440 minuten, standaard 15) of de alleen-lezen modus
-   in te schakelen.
+1. Maak in de MyŠkoda-app een API-sleutel aan via <https://go.skoda.eu/api-keys> en kies de
+   voertuig(en) waarvoor hij geldt. Sleutels zijn aan die voertuigen gebonden en verlopen.
+2. Ga naar **Instellingen → Apparaten & services → Integratie toevoegen** en zoek "Škoda Connect".
+3. Voer de API-sleutel en het VIN van elk voertuig in (meerdere VIN's gescheiden door komma's).
+   De API heeft geen voertuiglijst, dus de VIN's moeten handmatig worden ingevoerd.
+4. Via **Configureren** wijzig je het pollinginterval (5-1440 minuten, standaard 10) of zet je
+   de alleen-lezen-modus aan.
 
-Als je sessie verloopt, toont Home Assistant een melding om "opnieuw aan te melden" — klik
-erop en voer je wachtwoord opnieuw in om de verbinding te herstellen zonder de geschiedenis
-van je entiteiten te verliezen.
+Verloopt de sleutel, dan vraagt Home Assistant om opnieuw te verifiëren: maak een nieuwe sleutel
+aan en voer die in.
+
+**Upgraden vanaf 0.2.x:** bestaande configuraties gebruikten e-mail en wachtwoord, die de
+publieke API niet accepteert. Na de update vraagt Home Assistant om opnieuw te verifiëren met
+een API-sleutel en de VIN(s). Entiteiten die blijven bestaan behouden hun geschiedenis.
 
 ## Over de API
 
-Deze integratie maakt bewust gebruik van het door de community onderhouden `myskoda`
-PyPI-pakket, in plaats van zelf een OAuth2/REST/MQTT-client voor Škoda te bouwen. Zo profiteert
-de integratie van updates en dekking van de steeds veranderende voertuigmogelijkheden van de
-publieke API. Data wordt alleen ververst via polling — MQTT-pushmeldingen van de API worden
-niet gebruikt, wat de integratie eenvoudig houdt en een extra faalpunt vermijdt.
+De integratie gebruikt uitsluitend de gedocumenteerde endpoints onder
+`https://public.api.connect.skoda-auto.cz/api/v1/vehicles/{vin}` en authenticeert met de
+`X-API-Key`-header.
 
 ### Rate limits
 
-De publieke MySkoda API hanteert een quotum per account en geeft HTTP 429 (Too Many Requests)
-terug zodra dat wordt overschreden — de `myskoda`-client zelf doet daar geen retry of backoff
-op. Uit meldingen van de community (zie
-[skodaconnect/homeassistant-myskoda#1053](https://github.com/skodaconnect/homeassistant-myskoda/issues/1053))
-blijkt dat te agressief pollen kan leiden tot een tijdelijke rate limit, of in het ergste geval
-een geblokkeerd account — vooral omdat het ophalen van de volledige status van één voertuig al
-gauw 10–13 losse API-requests kost (één per ondersteunde capability, plus voertuiginfo en
-onderhoudsgegevens).
+De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). Een poll kost
+één verzoek per voertuig, elk commando nog één. Daarom:
 
-Om ruim binnen het quotum te blijven, doet deze integratie het volgende:
-
-- Standaard een vernieuwingsinterval van 15 minuten, wat ook het afgedwongen minimum is in de
-  opties-flow — je kunt dus niet per ongeluk een nog korter, risicovoller interval instellen.
-  Heb je meerdere voertuigen op één account, overweeg dan om dit te verhogen.
-- HTTP 429/430-responses worden expliciet herkend, waarna het pollen wordt gepauzeerd. De
-  `Retry-After`-header van de API wordt gerespecteerd indien aanwezig (met een terugval naar
-  15 minuten, met een maximum van 1 uur, als deze ontbreekt of niet te lezen is), in plaats van
-  meteen bij de volgende cyclus opnieuw te proberen.
-- Er wordt een duidelijke waarschuwing gelogd wanneer dit gebeurt, zichtbaar onder
-  **Instellingen → Systeem → Logboeken**, zodat het niet stilletjes te snel opnieuw probeert.
+- is het standaardinterval 10 minuten (minimaal 5);
+- wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
+- worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd (`Retry-After`, minimaal
+  15 minuten, maximaal 1 uur);
+- blijft de laatst bekende status van een voertuig behouden als alleen zijn verzoek mislukt.
 
 ## Changelog
 
@@ -127,5 +111,5 @@ Zie [CHANGELOG.nl.md](CHANGELOG.nl.md) voor de release notes.
 ## Disclaimer
 
 Aangeboden zoals het is, zonder garantie. Škoda Auto kan zijn API op elk moment wijzigen,
-waardoor deze integratie kan stoppen met werken. Gebruik van de publieke MySkoda API valt
+waardoor deze integratie kan stoppen met werken. Gebruik van de publieke MyŠkoda API valt
 onder de eigen gebruiksvoorwaarden van Škoda.

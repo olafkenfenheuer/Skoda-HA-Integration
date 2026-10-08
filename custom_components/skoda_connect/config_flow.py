@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
-from aiohttp import ClientResponseError
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -22,44 +22,47 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
 )
 
-from myskoda import AuthorizationFailedError, MySkoda
-
+from .api import SkodaApi, SkodaApiError, SkodaAuthError, SkodaRateLimitError
 from .const import (
+    API_KEYS_URL,
+    CONF_API_KEY,
     CONF_READ_ONLY,
-    CONF_SPIN,
+    CONF_VINS,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DOMAIN,
     MAX_SCAN_INTERVAL_MINUTES,
     MIN_SCAN_INTERVAL_MINUTES,
 )
-from .coordinator import RATE_LIMIT_STATUS_CODES
 
 _LOGGER = logging.getLogger(__name__)
 
+VIN_RE = re.compile(r"^[A-HJ-NPR-Z0-9]{17}$")
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_SPIN): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_VINS): str,
     }
 )
 
 
-async def _validate_login(hass, email: str, password: str) -> list[str]:
-    """Validate credentials against the MySkoda API and return the account's VINs."""
-    session = async_get_clientsession(hass)
-    myskoda = MySkoda(session, mqtt_enabled=False)
-    try:
-        await myskoda.connect(email, password)
-        vins = await myskoda.list_vehicle_vins()
-    finally:
-        await myskoda.disconnect()
-    return vins
+def _parse_vins(raw: str) -> list[str]:
+    """Split a comma/space separated VIN list, de-duplicated and upper-cased."""
+    vins = [v.strip().upper() for v in re.split(r"[,\s;]+", raw) if v.strip()]
+    return list(dict.fromkeys(vins))
 
 
-def _error_code_for(err: Exception) -> str:
-    """Map an exception raised during login validation to a translated error code."""
-    if isinstance(err, ClientResponseError) and err.status in RATE_LIMIT_STATUS_CODES:
+async def _validate(hass, api_key: str, vins: list[str]) -> None:
+    """Check that the API key can read every VIN (one cheap request per vehicle)."""
+    api = SkodaApi(async_get_clientsession(hass), api_key)
+    for vin in vins:
+        await api.get_vehicle(vin, include=["info"])
+
+
+def _error_for(err: Exception) -> str:
+    if isinstance(err, SkodaAuthError):
+        return "invalid_auth"
+    if isinstance(err, SkodaRateLimitError):
         return "rate_limited"
     return "cannot_connect"
 
@@ -73,47 +76,54 @@ class SkodaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._reauth_entry: ConfigEntry | None = None
 
+    async def _validate_input(self, user_input: dict[str, Any]) -> tuple[list[str], str | None]:
+        vins = _parse_vins(user_input[CONF_VINS])
+        if not vins or not all(VIN_RE.match(v) for v in vins):
+            return vins, "invalid_vin"
+        try:
+            await _validate(self.hass, user_input[CONF_API_KEY].strip(), vins)
+        except SkodaApiError as err:
+            _LOGGER.debug("Validation failed: %s", err)
+            return vins, _error_for(err)
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Unexpected error validating Škoda Connect API key")
+            return vins, "cannot_connect"
+        return vins, None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step, asking for MySkoda account credentials."""
+        """Handle the initial step, asking for an API key and the VIN(s)."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            email = user_input[CONF_EMAIL]
-            await self.async_set_unique_id(email.lower())
-            self._abort_if_unique_id_configured()
-
-            try:
-                vins = await _validate_login(
-                    self.hass, email, user_input[CONF_PASSWORD]
-                )
-            except AuthorizationFailedError:
-                errors["base"] = "invalid_auth"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected error validating Škoda Connect login")
-                errors["base"] = _error_code_for(err)
+            vins, error = await self._validate_input(user_input)
+            if error:
+                errors["base"] = error
             else:
-                if not vins:
-                    errors["base"] = "no_vehicles"
-                else:
-                    return self.async_create_entry(
-                        title=email,
-                        data={
-                            CONF_EMAIL: email,
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_SPIN: user_input.get(CONF_SPIN),
-                        },
-                    )
+                await self.async_set_unique_id(",".join(sorted(vins)))
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=", ".join(vins),
+                    data={
+                        CONF_API_KEY: user_input[CONF_API_KEY].strip(),
+                        CONF_VINS: vins,
+                    },
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+            description_placeholders={"api_keys_url": API_KEYS_URL},
         )
 
     async def async_step_reauth(
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Handle reauthentication triggered by an expired/invalid session."""
+        """Handle an expired/invalid API key, or an entry from the old login-based version."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
@@ -122,36 +132,35 @@ class SkodaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for a new password for an existing account."""
+        """Ask for a new API key (and the VINs, for entries created before API keys)."""
         errors: dict[str, str] = {}
         assert self._reauth_entry is not None
+        old_vins = self._reauth_entry.data.get(CONF_VINS) or []
 
         if user_input is not None:
-            try:
-                await _validate_login(
-                    self.hass,
-                    self._reauth_entry.data[CONF_EMAIL],
-                    user_input[CONF_PASSWORD],
-                )
-            except AuthorizationFailedError:
-                errors["base"] = "invalid_auth"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected error validating Škoda Connect login")
-                errors["base"] = _error_code_for(err)
+            vins, error = await self._validate_input(
+                {CONF_API_KEY: user_input[CONF_API_KEY], CONF_VINS: user_input[CONF_VINS]}
+            )
+            if error:
+                errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
                     self._reauth_entry,
-                    data={
-                        **self._reauth_entry.data,
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
+                    unique_id=",".join(sorted(vins)),
+                    title=", ".join(vins),
+                    data={CONF_API_KEY: user_input[CONF_API_KEY].strip(), CONF_VINS: vins},
                 )
 
+        schema = vol.Schema(
+            {vol.Required(CONF_API_KEY): str, vol.Required(CONF_VINS): str}
+        )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=self.add_suggested_values_to_schema(
+                schema, {CONF_VINS: ", ".join(old_vins)}
+            ),
             errors=errors,
-            description_placeholders={"email": self._reauth_entry.data[CONF_EMAIL]},
+            description_placeholders={"api_keys_url": API_KEYS_URL},
         )
 
     @staticmethod

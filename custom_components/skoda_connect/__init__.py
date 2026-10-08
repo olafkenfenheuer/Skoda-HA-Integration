@@ -5,25 +5,28 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from myskoda import AuthorizationFailedError, MySkoda
-
-from .const import CONF_READ_ONLY, DEFAULT_SCAN_INTERVAL_MINUTES
+from .api import SkodaApi
+from .const import (
+    CONF_API_KEY,
+    CONF_READ_ONLY,
+    CONF_VINS,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+)
 from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
-    Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -31,27 +34,20 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
     """Set up Škoda Connect from a config entry."""
-    session = async_get_clientsession(hass)
-    # MQTT push events are not used by this integration; data is refreshed by polling.
-    myskoda = MySkoda(session, mqtt_enabled=False)
+    api_key = entry.data.get(CONF_API_KEY)
+    vins = entry.data.get(CONF_VINS)
+    if not api_key or not vins:
+        # Entry created by a version that logged in with email and password: the public
+        # API only accepts API keys, so ask the user for one.
+        raise ConfigEntryAuthFailed("An API key is required; create one in the MyŠkoda app")
 
-    try:
-        await myskoda.connect(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
-        vins = await myskoda.list_vehicle_vins()
-    except AuthorizationFailedError as err:
-        raise ConfigEntryAuthFailed("Škoda Connect login failed") from err
-    except Exception as err:  # noqa: BLE001 - underlying client raises plain Exceptions
-        raise ConfigEntryNotReady(f"Unable to reach Škoda Connect: {err}") from err
-
-    if not vins:
-        raise ConfigEntryNotReady("No vehicles found on this Škoda Connect account")
-
+    api = SkodaApi(async_get_clientsession(hass), api_key)
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES)
     coordinator = SkodaDataUpdateCoordinator(
         hass,
         entry,
-        myskoda,
-        vins,
+        api,
+        list(vins),
         update_interval=timedelta(minutes=scan_interval),
     )
     coordinator.read_only = entry.options.get(CONF_READ_ONLY, False)
@@ -68,10 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
     """Unload a config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        await entry.runtime_data.myskoda.disconnect()
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:

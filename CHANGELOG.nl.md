@@ -5,6 +5,30 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0]
+
+### Gewijzigd
+
+- **Gemigreerd naar de officiële MyŠkoda Public API**
+  (<https://public.api.connect.skoda-auto.cz/docs>). Authenticatie gebeurt nu met een API-sleutel
+  uit de MyŠkoda-app in plaats van e-mail en wachtwoord; de `myskoda`-afhankelijkheid is
+  verwijderd. Bestaande configuraties vragen om opnieuw te verifiëren (API-sleutel en VIN(s)).
+- Pollen kost nu één verzoek per voertuig (was 10-13). Standaardinterval 10 minuten (minimaal 5),
+  omdat de API 20 verzoeken per uur en VIN toestaat.
+- Commando's verversen niet meer direct; één verversing volgt 30 seconden na het laatste commando.
+- De vergrendeling is nu een alleen-lezen `binary_sensor` (`unlocked`).
+
+### Toegevoegd
+
+- `select`-entiteit voor de laadmodus.
+- Diagnostics maskeren API-sleutel, VIN's, kenteken, positie en adres.
+
+### Verwijderd
+
+- Functies zonder publiek API-endpoint: vergrendelen/ontgrendelen (en S-PIN-optie), toeteren &
+  knipperen, knipperen, wakker maken, ruitverwarming, accuzorgmodus, gereduceerde laadstroom,
+  buitentemperatuur en softwareversie.
+
 ## [0.2.0]
 
 ### Toegevoegd

@@ -13,20 +13,38 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from myskoda.models.charging import ChargingState
-from myskoda.models.common import ConnectionState, OnOffState, OpenState
-from myskoda import Vehicle
-
+from .api import SkodaVehicle
 from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
+
+_UNKNOWN = ("UNKNOWN", "UNSUPPORTED")
+
+
+def _is(*path: str, value: str) -> Callable[[SkodaVehicle], bool | None]:
+    """Return a function comparing the value at ``path`` to ``value``.
+
+    Missing or unknown values yield None (unknown) instead of False.
+    """
+
+    def check(vehicle: SkodaVehicle) -> bool | None:
+        current = vehicle.get(*path)
+        if current is None or current in _UNKNOWN:
+            return None
+        return current == value
+
+    return check
+
+
+def _reported(*path: str) -> Callable[[SkodaVehicle], bool]:
+    return lambda vehicle: vehicle.has(*path)
 
 
 @dataclass(frozen=True, kw_only=True)
 class SkodaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Škoda Connect binary sensor entity."""
 
-    value_fn: Callable[[Vehicle], bool | None]
-    exists_fn: Callable[[Vehicle], bool] = lambda vehicle: True
+    value_fn: Callable[[SkodaVehicle], bool | None]
+    exists_fn: Callable[[SkodaVehicle], bool]
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[SkodaBinarySensorEntityDescription, ...] = (
@@ -34,59 +52,65 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[SkodaBinarySensorEntityDescription, ...] = (
         key="doors_open",
         translation_key="doors_open",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_fn=lambda v: v.status.overall.doors == OpenState.OPEN,
-        exists_fn=lambda v: v.status is not None and v.status.overall is not None,
+        value_fn=_is("status", "overall", "doors", value="OPEN"),
+        exists_fn=_reported("status", "overall", "doors"),
     ),
     SkodaBinarySensorEntityDescription(
         key="windows_open",
         translation_key="windows_open",
         device_class=BinarySensorDeviceClass.WINDOW,
-        value_fn=lambda v: v.status.overall.windows == OpenState.OPEN,
-        exists_fn=lambda v: v.status is not None and v.status.overall is not None,
+        value_fn=_is("status", "overall", "windows", value="OPEN"),
+        exists_fn=_reported("status", "overall", "windows"),
     ),
     SkodaBinarySensorEntityDescription(
         key="trunk_open",
         translation_key="trunk_open",
         device_class=BinarySensorDeviceClass.OPENING,
-        value_fn=lambda v: v.status.detail.trunk == OpenState.OPEN,
-        exists_fn=lambda v: v.status is not None and v.status.detail is not None,
+        value_fn=_is("status", "detail", "trunk", value="OPEN"),
+        exists_fn=_reported("status", "detail", "trunk"),
     ),
     SkodaBinarySensorEntityDescription(
         key="bonnet_open",
         translation_key="bonnet_open",
         device_class=BinarySensorDeviceClass.OPENING,
-        value_fn=lambda v: v.status.detail.bonnet == OpenState.OPEN,
-        exists_fn=lambda v: v.status is not None and v.status.detail is not None,
+        value_fn=_is("status", "detail", "bonnet", value="OPEN"),
+        exists_fn=_reported("status", "detail", "bonnet"),
     ),
     SkodaBinarySensorEntityDescription(
         key="lights_on",
         translation_key="lights_on",
         device_class=BinarySensorDeviceClass.LIGHT,
-        value_fn=lambda v: v.status.overall.lights == OnOffState.ON,
-        exists_fn=lambda v: v.status is not None and v.status.overall is not None,
+        value_fn=_is("status", "overall", "lights", value="ON"),
+        exists_fn=_reported("status", "overall", "lights"),
+    ),
+    SkodaBinarySensorEntityDescription(
+        # For the LOCK device class "on" means unlocked.
+        key="unlocked",
+        translation_key="unlocked",
+        device_class=BinarySensorDeviceClass.LOCK,
+        value_fn=_is("status", "overall", "locked", value="NO"),
+        exists_fn=_reported("status", "overall", "locked"),
     ),
     SkodaBinarySensorEntityDescription(
         key="charging",
         translation_key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda v: v.charging.status.state == ChargingState.CHARGING,
-        exists_fn=lambda v: v.charging is not None and v.charging.status is not None,
+        value_fn=_is("charging", "status", "state", value="CHARGING"),
+        exists_fn=_reported("charging", "status"),
     ),
     SkodaBinarySensorEntityDescription(
         key="plugged_in",
         translation_key="plugged_in",
         device_class=BinarySensorDeviceClass.PLUG,
-        value_fn=lambda v: v.air_conditioning.charger_connection_state
-        == ConnectionState.CONNECTED,
-        exists_fn=lambda v: v.air_conditioning is not None
-        and v.air_conditioning.charger_connection_state is not None,
+        value_fn=_is("charging", "status", "plugConnectionState", value="CONNECTED"),
+        exists_fn=_reported("charging", "status", "plugConnectionState"),
     ),
     SkodaBinarySensorEntityDescription(
         key="vehicle_in_saved_location",
         translation_key="vehicle_in_saved_location",
         icon="mdi:home-map-marker",
-        value_fn=lambda v: v.charging.is_vehicle_in_saved_location,
-        exists_fn=lambda v: v.charging is not None,
+        value_fn=lambda v: v.get("charging", "isVehicleInSavedLocation"),
+        exists_fn=_reported("charging", "isVehicleInSavedLocation"),
     ),
 )
 
@@ -98,12 +122,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Škoda Connect binary sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[SkodaBinarySensor] = []
-    for vin, vehicle in coordinator.data.vehicles.items():
-        for description in BINARY_SENSOR_DESCRIPTIONS:
-            if description.exists_fn(vehicle):
-                entities.append(SkodaBinarySensor(coordinator, vin, description))
-    async_add_entities(entities)
+    async_add_entities(
+        SkodaBinarySensor(coordinator, vin, description)
+        for vin, vehicle in coordinator.data.vehicles.items()
+        for description in BINARY_SENSOR_DESCRIPTIONS
+        if description.exists_fn(vehicle)
+    )
 
 
 class SkodaBinarySensor(SkodaVehicleEntity, BinarySensorEntity):
@@ -124,8 +148,5 @@ class SkodaBinarySensor(SkodaVehicleEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the condition described is active, tolerating missing data."""
-        try:
-            return self.entity_description.value_fn(self.vehicle)
-        except (AttributeError, KeyError, TypeError):
-            return None
+        """Return true if the condition described is active."""
+        return self.entity_description.value_fn(self.vehicle)

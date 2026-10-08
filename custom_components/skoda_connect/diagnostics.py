@@ -5,13 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SPIN
+from .const import CONF_API_KEY, CONF_VINS
 from .coordinator import SkodaConfigEntry
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_SPIN, "vin", "gps_coordinates", "address"}
+TO_REDACT = {
+    CONF_API_KEY,
+    CONF_VINS,
+    "vin",
+    "licensePlate",
+    "renderUrl",
+    "gpsCoordinates",
+    "formattedAddress",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -19,22 +26,15 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-
-    vehicles: dict[str, Any] = {}
-    for vin, vehicle in coordinator.data.vehicles.items():
-        sections: dict[str, Any] = {}
-        for field_name in vars(vehicle):
-            section = getattr(vehicle, field_name, None)
-            to_dict = getattr(section, "to_dict", None)
-            if callable(to_dict):
-                sections[field_name] = to_dict()
-            elif section is not None:
-                sections[field_name] = str(section)
-        vehicles[vin] = sections
-
     return {
+        "entry": async_redact_data(dict(entry.data), TO_REDACT),
         "options": dict(entry.options),
         "read_only": coordinator.read_only,
         "vehicle_count": len(coordinator.vins),
-        "vehicles": async_redact_data(vehicles, TO_REDACT),
+        "vehicles": {
+            f"vehicle_{index}": async_redact_data(
+                {"data": vehicle.data, "errors": vehicle.errors}, TO_REDACT
+            )
+            for index, vehicle in enumerate(coordinator.data.vehicles.values(), start=1)
+        },
     }
