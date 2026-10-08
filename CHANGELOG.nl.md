@@ -30,15 +30,15 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 - Het minimaal instelbare vernieuwingsinterval is verlaagd van 1 minuut naar 15 minuten, en de
   standaardwaarde van 30 naar 15 minuten. Het ophalen van de volledige status van één voertuig
-  kost ongeveer 10–13 losse API-requests, en de publieke API hanteert een strikt quotum per
+  kost ongeveer 10–13 losse API-requests, en de API hanteert een strikt quotum per
   account — bij een interval van 1 minuut liep je zo tegen een rate limit aan, of erger, een
   geblokkeerd account. Zie de sectie "Over de API" in de README voor meer uitleg als je meerdere
   voertuigen op één account hebt.
 
 ## [0.1.0] - 2026-08-28
 
-Eerste release: een Home Assistant-integratie voor Škoda-voertuigen, gebouwd op de officiële
-publieke MySkoda API, via de [`myskoda`](https://github.com/skodaconnect/myskoda)
+Eerste release: een Home Assistant-integratie voor Škoda-voertuigen, gebouwd op de
+MySkoda-app-API, via de [`myskoda`](https://github.com/skodaconnect/myskoda)
 Python-client.
 
 ### Toegevoegd

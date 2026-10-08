@@ -30,14 +30,14 @@ All notable changes to this integration are documented here. The format follows
 
 - Lowered the minimum configurable polling interval from 1 minute to 15 minutes, and the
   default from 30 to 15 minutes. Fetching one vehicle's full state costs roughly 10–13 separate
-  API requests, and the public API enforces a strict per-account quota — a 1-minute interval
+  API requests, and the API enforces a strict per-account quota — a 1-minute interval
   made it trivially easy to get rate limited or even locked out. See the "Notes on the API"
   section in the README for more detail if you have several vehicles on one account.
 
 ## [0.1.0] - 2026-08-28
 
-Initial release: a Home Assistant integration for Škoda vehicles built on the official public
-MySkoda API, via the [`myskoda`](https://github.com/skodaconnect/myskoda) Python client.
+Initial release: a Home Assistant integration for Škoda vehicles built on the MySkoda app
+API, via the [`myskoda`](https://github.com/skodaconnect/myskoda) Python client.
 
 ### Added
 
