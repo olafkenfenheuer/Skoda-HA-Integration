@@ -1,6 +1,6 @@
 # Škoda Connect voor Home Assistant
 
-[🇬🇧 English](README.md) | [🇳🇱 Nederlands](README.nl.md)
+[🇬🇧 English](README.md) | [🇩🇪 Deutsch](README.de.md) | [🇳🇱 Nederlands](README.nl.md)
 
 Een meertalige [Home Assistant](https://www.home-assistant.io/) custom integration voor
 Škoda-voertuigen, gebouwd op de officiële
@@ -49,8 +49,8 @@ Home Assistant kiest automatisch de vertaling die overeenkomt met de taalinstell
 installatie, met Engels als terugvaloptie. Bijdragen voor extra talen zijn welkom — voeg een
 nieuw bestand toe onder `custom_components/skoda_connect/translations/`.
 
-Ook deze documentatie is beschikbaar in het [Engels](README.md) en het
-[Nederlands](README.nl.md).
+Ook deze documentatie is beschikbaar in het [Engels](README.md), het
+[Duits](README.de.md) en het [Nederlands](README.nl.md).
 
 ## Installatie
 
