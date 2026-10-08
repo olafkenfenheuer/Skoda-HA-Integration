@@ -112,11 +112,20 @@ na 30 seconden meteen).
 De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). Een poll kost
 één verzoek per voertuig, elk commando nog één. Daarom:
 
-- is het standaardinterval 10 minuten (minimaal 5) en 5 minuten tijdens het laden;
+- is het standaardinterval 10 minuten (minimaal 5) en 5 minuten tijdens het laden (of bij aangesloten kabel, als je die optie aanzet);
 - wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
 - worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd (`Retry-After`, minimaal
   15 minuten, maximaal 1 uur);
 - blijft de laatst bekende status van een voertuig behouden als alleen zijn verzoek mislukt.
+
+## Ontwikkeling
+
+```bash
+pip install pytest-homeassistant-custom-component
+pytest
+```
+
+Zie [CLAUDE.md](CLAUDE.md) voor een overzicht van de code en conventies.
 
 ## Changelog
 

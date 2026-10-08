@@ -87,10 +87,11 @@ Diese Dokumentation gibt es auf [Englisch](README.md), [Deutsch](README.de.md) u
 3. Gib den API-Schlüssel und die VIN jedes Fahrzeugs ein (mehrere VINs durch Komma getrennt). Die API
    bietet keine Fahrzeugliste, daher müssen die VINs manuell eingegeben werden.
 4. Home Assistant prüft den Schlüssel und legt pro Fahrzeug ein Gerät mit allen passenden Entitäten an.
-5. Nach der Einrichtung kannst du im Dialog **Konfigurieren** das Abfrageintervall
-   (5–1440 Minuten, Standard 10), das kürzere Intervall **während des Ladens** (Standard 5) den
-   Nur-Lese-Modus oder die Option, das Ladeintervall **auch bei eingestecktem Ladekabel** zu verwenden
-   (nicht nur während des Ladens).
+5. Nach der Einrichtung kannst du im Dialog **Konfigurieren** einstellen:
+   - das Abfrageintervall (5–1440 Minuten, Standard 10),
+   - das kürzere Intervall **während des Ladens** (Standard 5),
+   - ob dieses Ladeintervall **auch bei eingestecktem Ladekabel** gilt (Standard aus),
+   - den Nur-Lese-Modus.
 
 Den API-Schlüssel (oder die VINs) kannst du jederzeit ersetzen – vor dem Ablauf oder nachdem du einen
 neuen erstellt hast – unter **Einstellungen → Geräte & Dienste → Škoda Connect → ⋮ → Neu konfigurieren**.
@@ -119,12 +120,12 @@ Jedes Fahrzeug hat zwei `number`-Entitäten (Kategorie Konfiguration): **Abfrage
 **Abfrageintervall beim Laden**. Sie überschreiben für dieses Fahrzeug die Standardwerte aus den
 Integrationsoptionen, gelten sofort ohne Neuladen und lassen sich aus Automationen setzen
 (`number.set_value`). Ein Fahrzeug wird mit seinem Ladeintervall abgefragt, sobald der zuletzt
-abgerufene Zustand `CHARGING` ist (oder mit der Option „Ladeintervall auch bei eingestecktem Ladekabel
-verwenden“ sobald das Kabel eingesteckt ist – praktisch, um den Beginn eines zeitgesteuerten Ladevorgangs
-zu erfassen, hält aber das schnellere Intervall, solange das Auto angesteckt bleibt). Nach dem Start eines Ladevorgangs kann es daher bis zu ein
-normales Intervall dauern, bis das schnellere Polling greift – der Schalter bzw. Befehl „Laden“
-aktualisiert das Fahrzeug nach 30 Sekunden, sodass das Umschalten beim Start über Home Assistant
-sofort passiert.
+abgerufene Zustand `CHARGING` ist. Mit der Option „Ladeintervall auch bei eingestecktem Ladekabel
+verwenden“ gilt es auch, sobald das Ladekabel eingesteckt ist – praktisch, um den Beginn eines
+zeitgesteuerten Ladevorgangs zu erfassen, das schnellere Intervall bleibt dann aber aktiv, solange das Auto
+angesteckt ist. Nach dem Start eines Ladevorgangs kann es bis zu ein normales Intervall dauern, bis das
+schnellere Polling greift; startest du das Laden über Home Assistant, wird das Fahrzeug nach 30 Sekunden
+aktualisiert und schaltet sofort um.
 
 ### Ratenlimit
 
@@ -132,7 +133,7 @@ Die API erlaubt derzeit **20 Anfragen pro Stunde und VIN** (laut Dokumentation n
 Ein Poll kostet eine Anfrage pro Fahrzeug, jeder Fernbefehl eine weitere. Deshalb:
 
 - Standardintervall 10 Minuten (6 Anfragen/Stunde) bei 5 Minuten Minimum, und 5 Minuten, solange ein
-  Fahrzeug lädt (12 Anfragen/Stunde – lass Platz für Befehle).
+  Fahrzeug lädt bzw. – mit aktivierter Option – eingesteckt ist (12 Anfragen/Stunde – lass Platz für Befehle).
 - Nach Befehlen wird nicht jedes Mal aktualisiert; Befehle werden asynchron angenommen (HTTP 202),
   daher wird 30 Sekunden nach dem letzten Befehl einmal aktualisiert.
 - HTTP-429-Antworten werden erkannt und das Polling pausiert, unter Beachtung von `Retry-After`
@@ -142,6 +143,15 @@ Ein Poll kostet eine Anfrage pro Fahrzeug, jeder Fernbefehl eine weitere. Deshal
 Teile des Fahrzeugs, die die API nicht melden kann (zum Beispiel weil das Fahrzeug schläft), fehlen
 in der Antwort einfach; die zugehörigen Entitäten werden angelegt, sobald die Daten verfügbar sind,
 was ein Neuladen der Integration erfordern kann.
+
+## Entwicklung
+
+```bash
+pip install pytest-homeassistant-custom-component
+pytest
+```
+
+Einen Überblick über Code-Aufbau und Konventionen gibt [CLAUDE.md](CLAUDE.md).
 
 ## Changelog
 

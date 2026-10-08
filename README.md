@@ -85,8 +85,11 @@ This documentation itself is available in [English](README.md),
    has no vehicle list endpoint, so the VINs have to be entered manually.
 4. Home Assistant validates the key and creates one device per vehicle with all applicable
    entities.
-5. After setup, open the integration's **Configure** dialog to change the polling interval
-   (5-1440 minutes, default 10), the shorter interval used **while charging** (default 5), optionally also use that charging interval **while the cable is plugged in** (not only while charging), or enable read-only mode.
+5. After setup, open the integration's **Configure** dialog to change:
+   - the polling interval (5-1440 minutes, default 10),
+   - the shorter polling interval used **while charging** (default 5),
+   - whether that charging interval is **also used while the cable is plugged in** (default off),
+   - read-only mode.
 
 You can replace the API key (or change the VINs) at any time - before it expires, or after creating a
 new one - via **Settings → Devices & Services → Škoda Connect → ⋮ → Reconfigure**. The entry is reloaded
@@ -114,11 +117,12 @@ Every vehicle has two `number` entities (configuration category): **Polling inte
 **Polling interval while charging**. They override the defaults from the integration options for
 that vehicle, apply immediately without reloading, and can be set from automations
 (`number.set_value`). A vehicle is polled at its charging interval as soon as the last fetched
-state is `CHARGING` (or, with the option "Use the charging interval while the cable is plugged in",
-as soon as the cable is plugged in - useful to catch the start of a timer-controlled charge, but it keeps
-the faster interval for as long as the car stays plugged in), so after a charge starts it can take up to one normal interval until the
-faster polling kicks in - the "Charging" switch/command refreshes the vehicle after 30 seconds, so
-starting charging from Home Assistant switches over right away.
+state is `CHARGING`. With the option "Use the charging interval while the cable is plugged in" it
+is also used as soon as the charging cable is plugged in - useful to catch the start of a
+timer-controlled charge, but the faster interval then stays active for as long as the car remains
+plugged in. After a charge starts it can take up to one normal interval until the faster polling kicks
+in; starting charging from Home Assistant refreshes the vehicle after 30 seconds, so it switches over
+right away.
 
 ### Rate limits
 
@@ -127,7 +131,8 @@ costs one request per vehicle, and every remote command costs one more. Therefor
 integration:
 
 - Defaults to a 10-minute polling interval (6 requests/hour) with a 5-minute minimum, and to 5 minutes
-  while a vehicle is charging (12 requests/hour - leave room for commands).
+  while a vehicle is charging, or plugged in if you enable that option (12 requests/hour - leave room
+  for commands).
 - Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so
   it schedules a single refresh 30 seconds after the last command.
 - Detects HTTP 429 responses and pauses polling, honoring `Retry-After` (at least 15 minutes,
@@ -137,6 +142,15 @@ integration:
 Parts of the vehicle the API cannot report (for example because the vehicle is asleep) are
 simply omitted from its response; the corresponding entities are created once the data is
 available, which can require reloading the integration.
+
+## Development
+
+```bash
+pip install pytest-homeassistant-custom-component
+pytest
+```
+
+See [CLAUDE.md](CLAUDE.md) for an overview of the code layout and conventions.
 
 ## Changelog
 
