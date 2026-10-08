@@ -5,6 +5,13 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.5]
+
+### Toegevoegd
+
+- Schakelaar per voertuig "Laadinterval bij aangesloten kabel" (categorie configuratie). Overschrijft voor
+  dat voertuig de algemene optie met dezelfde naam en werkt direct.
+
 ## [0.3.4]
 
 ### Toegevoegd

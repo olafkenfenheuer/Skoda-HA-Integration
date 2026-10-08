@@ -133,6 +133,9 @@
     "switch": {
       "charging": {
         "name": "Charging"
+      },
+      "poll_when_plugged_in": {
+        "name": "Charging interval while plugged in"
       }
     },
     "number": {

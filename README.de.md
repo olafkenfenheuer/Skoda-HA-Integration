@@ -127,6 +127,9 @@ angesteckt ist. Nach dem Start eines Ladevorgangs kann es bis zu ein normales In
 schnellere Polling greift; startest du das Laden über Home Assistant, wird das Fahrzeug nach 30 Sekunden
 aktualisiert und schaltet sofort um.
 
+Der Schalter **Ladeintervall bei eingestecktem Kabel** (Kategorie Konfiguration) macht dasselbe pro
+Fahrzeug und überschreibt für dieses Fahrzeug die globale Option.
+
 ### Ratenlimit
 
 Die API erlaubt derzeit **20 Anfragen pro Stunde und VIN** (laut Dokumentation noch nicht final).

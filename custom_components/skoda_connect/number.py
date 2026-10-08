@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import SkodaVehicle
-from .const import CONF_VEHICLE_INTERVALS, MIN_SCAN_INTERVAL_MINUTES, POLL_INTERVAL_NUMBER_MAX_MINUTES
+from .const import MIN_SCAN_INTERVAL_MINUTES, POLL_INTERVAL_NUMBER_MAX_MINUTES
 from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
 
@@ -97,12 +97,5 @@ class SkodaPollIntervalNumber(SkodaVehicleEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Persist the new interval; the entry's update listener applies it."""
-        intervals = {
-            vin: dict(kinds)
-            for vin, kinds in self._entry.options.get(CONF_VEHICLE_INTERVALS, {}).items()
-        }
-        intervals.setdefault(self.vin, {})[self._kind] = int(value)
-        self.hass.config_entries.async_update_entry(
-            self._entry, options={**self._entry.options, CONF_VEHICLE_INTERVALS: intervals}
-        )
+        self.coordinator.set_vehicle_option(self.vin, self._kind, int(value))
         self.async_write_ha_state()

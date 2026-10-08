@@ -17,6 +17,8 @@ CONF_CHARGING_SCAN_INTERVAL: Final = "charging_scan_interval"
 CONF_PLUGGED_IN_FAST_POLLING: Final = "plugged_in_fast_polling"
 # Per-vehicle overrides in the entry options: {vin: {"idle": minutes, "charging": minutes}}
 CONF_VEHICLE_INTERVALS: Final = "vehicle_intervals"
+# Key of the per-vehicle override of CONF_PLUGGED_IN_FAST_POLLING inside CONF_VEHICLE_INTERVALS[vin].
+KEY_PLUGGED_IN: Final = "plugged_in"
 
 # The public API allows 20 requests per hour and VIN (the limit is documented as not
 # final), and every command counts against the same quota. One poll costs a single

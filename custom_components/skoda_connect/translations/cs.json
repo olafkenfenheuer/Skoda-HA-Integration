@@ -133,6 +133,9 @@
     "switch": {
       "charging": {
         "name": "Nabíjení"
+      },
+      "poll_when_plugged_in": {
+        "name": "Interval nabíjení při zapojeném kabelu"
       }
     },
     "number": {

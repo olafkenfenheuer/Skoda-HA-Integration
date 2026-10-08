@@ -133,6 +133,9 @@
     "switch": {
       "charging": {
         "name": "Charge"
+      },
+      "poll_when_plugged_in": {
+        "name": "Intervalle de charge câble branché"
       }
     },
     "number": {

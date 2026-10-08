@@ -200,3 +200,41 @@ async def test_plugged_in_uses_charging_interval_only_when_enabled(hass: HomeAss
         assert not c.uses_charging_interval(VIN)
     finally:
         p.stop()
+
+
+async def test_plugged_in_switch_overrides_global_option_per_vehicle(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry = _entry(vins=(VIN, VIN2))
+    mock, p = await _setup(hass, entry, {VIN: False, VIN2: False})
+    try:
+        c = entry.runtime_data
+        reg = er.async_get(hass)
+        ids = {
+            vin: reg.async_get_entity_id("switch", DOMAIN, f"{vin}_poll_when_plugged_in")
+            for vin in (VIN, VIN2)
+        }
+        assert all(ids.values())
+        assert not c.plugged_in_fast_polling(VIN)  # follows the (off) global option
+
+        await hass.services.async_call("switch", "turn_on", {"entity_id": ids[VIN]}, blocking=True)
+        await hass.async_block_till_done()
+        c = entry.runtime_data
+        assert c.plugged_in_fast_polling(VIN)
+        assert not c.plugged_in_fast_polling(VIN2)
+        assert hass.states.get(ids[VIN]).state == "on"
+        assert hass.states.get(ids[VIN2]).state == "off"
+
+        # A per-vehicle "off" beats a global "on".
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, "plugged_in_fast_polling": True}
+        )
+        await hass.async_block_till_done()
+        c = entry.runtime_data
+        await hass.services.async_call("switch", "turn_off", {"entity_id": ids[VIN]}, blocking=True)
+        await hass.async_block_till_done()
+        c = entry.runtime_data
+        assert not c.plugged_in_fast_polling(VIN)
+        assert c.plugged_in_fast_polling(VIN2)  # global option still applies
+    finally:
+        p.stop()

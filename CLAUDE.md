@@ -49,10 +49,11 @@ python -m compileall -q custom_components           # quick syntax check
 
 ## Conventions
 
-- Unique IDs are `{vin}_{key}` (and `{vin}_poll_interval_{idle|charging}`); keep them stable so
+- Unique IDs are `{vin}_{key}` (and `{vin}_poll_interval_{idle|charging}`, `{vin}_poll_when_plugged_in`); keep them stable so
   existing entity history survives.
 - Options live in `entry.options`: `scan_interval`, `charging_scan_interval`, `plugged_in_fast_polling`, `read_only`, and
-  per-vehicle `vehicle_intervals: {vin: {idle, charging}}`. The update listener only reloads the entry
+  per-vehicle `vehicle_intervals: {vin: {idle, charging, plugged_in}}` (written via
+  `coordinator.set_vehicle_option`; `plugged_in` overrides `plugged_in_fast_polling`). The update listener only reloads the entry
   when `read_only` changes; interval changes call `coordinator.reschedule()`.
 - Every remote control goes through `coordinator.async_command(vin, coroutine)`.
 - Changing user-facing strings: update **all six** translation files and copy `en.json` to

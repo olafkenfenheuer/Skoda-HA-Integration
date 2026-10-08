@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DOMAIN,
+    KEY_PLUGGED_IN,
     POST_COMMAND_REFRESH_DELAY,
 )
 
@@ -97,9 +98,26 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         """Return whether the vehicle is polled at its (shorter) charging interval."""
         if self.is_charging(vin):
             return True
-        return bool(
-            self.config_entry.options.get(CONF_PLUGGED_IN_FAST_POLLING, False)
-            and self.is_plugged_in(vin)
+        return self.plugged_in_fast_polling(vin) and self.is_plugged_in(vin)
+
+    def plugged_in_fast_polling(self, vin: str) -> bool:
+        """Return whether a plugged-in cable selects the charging interval for this vehicle.
+
+        A per-vehicle setting overrides the global option.
+        """
+        options = self.config_entry.options
+        override = options.get(CONF_VEHICLE_INTERVALS, {}).get(vin, {}).get(KEY_PLUGGED_IN)
+        if override is not None:
+            return bool(override)
+        return bool(options.get(CONF_PLUGGED_IN_FAST_POLLING, False))
+
+    def set_vehicle_option(self, vin: str, key: str, value: int | bool) -> None:
+        """Store a per-vehicle polling setting; the entry's update listener applies it."""
+        options = self.config_entry.options
+        overrides = {v: dict(k) for v, k in options.get(CONF_VEHICLE_INTERVALS, {}).items()}
+        overrides.setdefault(vin, {})[key] = value
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options={**options, CONF_VEHICLE_INTERVALS: overrides}
         )
 
     def interval_minutes(self, vin: str, kind: str) -> int:

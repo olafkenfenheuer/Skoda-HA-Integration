@@ -5,6 +5,13 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.5]
+
+### Added
+
+- Per-vehicle switch "Charging interval while plugged in" (configuration category). It overrides the
+  global option of the same name for that vehicle and applies immediately.
+
 ## [0.3.4]
 
 ### Added
