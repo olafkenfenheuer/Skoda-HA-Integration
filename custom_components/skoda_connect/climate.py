@@ -105,6 +105,7 @@ class SkodaClimate(SkodaVehicleEntity, ClimateEntity):
             return
         if self.hvac_mode == HVACMode.HEAT_COOL:
             await self.coordinator.async_command(
+                self.vin,
                 self.coordinator.api.start_air_conditioning(self.vin, temperature)
             )
         self._requested_temperature = temperature
@@ -126,7 +127,7 @@ class SkodaClimate(SkodaVehicleEntity, ClimateEntity):
             command = api.start_air_conditioning(
                 self.vin, self.target_temperature or DEFAULT_TARGET_TEMPERATURE
             )
-        await self.coordinator.async_command(command)
+        await self.coordinator.async_command(self.vin, command)
 
     async def async_turn_on(self) -> None:
         """Turn the air conditioning on."""

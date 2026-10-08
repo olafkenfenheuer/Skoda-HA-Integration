@@ -35,6 +35,7 @@
         "title": "Škoda Connect-Optionen",
         "data": {
           "scan_interval": "Abfrageintervall (Minuten)",
+          "charging_scan_interval": "Abfrageintervall beim Laden (Minuten)",
           "read_only": "Nur-Lese-Modus (alle Fernsteuerungen deaktivieren)"
         }
       }
@@ -126,6 +127,12 @@
     "number": {
       "charge_limit": {
         "name": "Ladegrenze"
+      },
+      "poll_interval_idle": {
+        "name": "Abfrageintervall"
+      },
+      "poll_interval_charging": {
+        "name": "Abfrageintervall beim Laden"
       }
     },
     "select": {

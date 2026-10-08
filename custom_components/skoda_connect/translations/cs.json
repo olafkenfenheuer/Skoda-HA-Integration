@@ -34,7 +34,8 @@
       "init": {
         "title": "Možnosti Škoda Connect",
         "data": {
-          "scan_interval": "Interval aktualizace (minuty)",
+          "scan_interval": "Interval dotazování (minuty)",
+          "charging_scan_interval": "Interval dotazování při nabíjení (minuty)",
           "read_only": "Režim pouze pro čtení (vypne veškeré dálkové ovládání)"
         }
       }
@@ -126,6 +127,12 @@
     "number": {
       "charge_limit": {
         "name": "Limit nabití"
+      },
+      "poll_interval_idle": {
+        "name": "Interval dotazování"
+      },
+      "poll_interval_charging": {
+        "name": "Interval dotazování při nabíjení"
       }
     },
     "select": {

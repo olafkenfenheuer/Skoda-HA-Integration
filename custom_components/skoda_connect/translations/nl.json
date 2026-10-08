@@ -34,7 +34,8 @@
       "init": {
         "title": "Škoda Connect-opties",
         "data": {
-          "scan_interval": "Vernieuwingsinterval (minuten)",
+          "scan_interval": "Pollinginterval (minuten)",
+          "charging_scan_interval": "Pollinginterval tijdens laden (minuten)",
           "read_only": "Alleen-lezen modus (alle bedieningsfuncties uitschakelen)"
         }
       }
@@ -126,6 +127,12 @@
     "number": {
       "charge_limit": {
         "name": "Laadlimiet"
+      },
+      "poll_interval_idle": {
+        "name": "Pollinginterval"
+      },
+      "poll_interval_charging": {
+        "name": "Pollinginterval tijdens laden"
       }
     },
     "select": {

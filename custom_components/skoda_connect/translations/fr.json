@@ -34,7 +34,8 @@
       "init": {
         "title": "Options Škoda Connect",
         "data": {
-          "scan_interval": "Intervalle d'actualisation (minutes)",
+          "scan_interval": "Intervalle d'interrogation (minutes)",
+          "charging_scan_interval": "Intervalle d'interrogation pendant la charge (minutes)",
           "read_only": "Mode lecture seule (désactive toutes les commandes à distance)"
         }
       }
@@ -126,6 +127,12 @@
     "number": {
       "charge_limit": {
         "name": "Limite de charge"
+      },
+      "poll_interval_idle": {
+        "name": "Intervalle d'interrogation"
+      },
+      "poll_interval_charging": {
+        "name": "Intervalle d'interrogation pendant la charge"
       }
     },
     "select": {

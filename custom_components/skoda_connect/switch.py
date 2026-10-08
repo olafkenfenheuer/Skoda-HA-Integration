@@ -44,8 +44,12 @@ class SkodaChargingSwitch(SkodaVehicleEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start charging."""
-        await self.coordinator.async_command(self.coordinator.api.start_charging(self.vin))
+        await self.coordinator.async_command(
+            self.vin, self.coordinator.api.start_charging(self.vin)
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop charging."""
-        await self.coordinator.async_command(self.coordinator.api.stop_charging(self.vin))
+        await self.coordinator.async_command(
+            self.vin, self.coordinator.api.stop_charging(self.vin)
+        )

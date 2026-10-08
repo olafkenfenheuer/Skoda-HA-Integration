@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable
 from dataclasses import dataclass, field
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.event import async_call_later
@@ -21,12 +23,21 @@ from .api import (
     SkodaRateLimitError,
     SkodaVehicle,
 )
-from .const import DOMAIN, POST_COMMAND_REFRESH_DELAY
+from .const import (
+    CONF_CHARGING_SCAN_INTERVAL,
+    CONF_VEHICLE_INTERVALS,
+    DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+    POST_COMMAND_REFRESH_DELAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
 MAX_RATE_LIMIT_BACKOFF = timedelta(hours=1)
+# A vehicle counts as due slightly early so scheduler jitter never skips a whole tick.
+DUE_TOLERANCE_SECONDS = 10
 
 
 @dataclass
@@ -45,7 +56,6 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         config_entry: SkodaConfigEntry,
         api: SkodaApi,
         vins: list[str],
-        update_interval: timedelta,
     ) -> None:
         """Set up the coordinator."""
         super().__init__(
@@ -53,22 +63,72 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=None,
         )
         self.api = api
         self.vins = vins
         self.read_only = False
         self._cancel_refresh: CALLBACK_TYPE | None = None
+        self._last_fetch: dict[str, float] = {}
+        self._force: set[str] = set()
+        self.update_interval = self._shortest_interval()
+
+    # -- per-vehicle polling intervals -------------------------------------------------
+
+    def is_charging(self, vin: str) -> bool:
+        """Return whether the last known state of the vehicle is "charging"."""
+        vehicle = self.data.vehicles.get(vin) if self.data else None
+        return bool(vehicle and vehicle.get("charging", "status", "state") == "CHARGING")
+
+    def interval_minutes(self, vin: str, kind: str) -> int:
+        """Return the configured interval of a vehicle; ``kind`` is "idle" or "charging"."""
+        options = self.config_entry.options
+        override = options.get(CONF_VEHICLE_INTERVALS, {}).get(vin, {}).get(kind)
+        if override is not None:
+            return int(override)
+        if kind == "charging":
+            return int(
+                options.get(CONF_CHARGING_SCAN_INTERVAL, DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES)
+            )
+        return int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES))
+
+    def _interval_for(self, vin: str) -> timedelta:
+        kind = "charging" if self.is_charging(vin) else "idle"
+        return timedelta(minutes=self.interval_minutes(vin, kind))
+
+    def _shortest_interval(self) -> timedelta:
+        return min(self._interval_for(vin) for vin in self.vins)
+
+    def _is_due(self, vin: str) -> bool:
+        if vin in self._force or not self.data or vin not in self.data.vehicles:
+            return True
+        elapsed = time.monotonic() - self._last_fetch.get(vin, 0)
+        return elapsed >= self._interval_for(vin).total_seconds() - DUE_TOLERANCE_SECONDS
+
+    def reschedule(self) -> None:
+        """Apply changed interval settings to the next poll."""
+        interval = self._shortest_interval()
+        if interval != self.update_interval:
+            self.update_interval = interval
+            self._schedule_refresh()
 
     async def _async_update_data(self) -> SkodaData:
         """Fetch the latest data for every vehicle from the cloud API."""
+        due = [vin for vin in self.vins if self._is_due(vin)]
         results = await asyncio.gather(
-            *(self.api.get_vehicle(vin) for vin in self.vins), return_exceptions=True
+            *(self.api.get_vehicle(vin) for vin in due), return_exceptions=True
         )
+        fetched = dict(zip(due, results, strict=True))
+        self._force.clear()
 
         vehicles: dict[str, SkodaVehicle] = {}
         failures: list[Exception] = []
-        for vin, result in zip(self.vins, results, strict=True):
+        for vin in self.vins:
+            if vin not in fetched:
+                # Not due yet: keep the last known state.
+                vehicles[vin] = self.data.vehicles[vin]
+                continue
+            result = fetched[vin]
             if isinstance(result, SkodaAuthError):
                 raise ConfigEntryAuthFailed(str(result)) from result
             if isinstance(result, SkodaRateLimitError):
@@ -87,22 +147,27 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
                     vehicles[vin] = self.data.vehicles[vin]
                 continue
             vehicles[vin] = result
+            self._last_fetch[vin] = time.monotonic()
 
-        if failures and not vehicles:
+        if failures and len(failures) == len(fetched):
             raise UpdateFailed(
                 f"Error communicating with Škoda Connect API: {failures[0]}"
             ) from failures[0]
         for failure in failures:
             _LOGGER.warning("Could not update a vehicle: %s", failure)
-        return SkodaData(vehicles=vehicles)
+        data = SkodaData(vehicles=vehicles)
+        # A vehicle that started or stopped charging switches to its other interval.
+        self.data = data
+        self.update_interval = self._shortest_interval()
+        return data
 
     @staticmethod
     def _rate_limit_backoff(err: SkodaRateLimitError) -> timedelta:
         backoff = err.retry_after if err.retry_after is not None else MIN_RATE_LIMIT_BACKOFF
         return min(max(backoff, MIN_RATE_LIMIT_BACKOFF), MAX_RATE_LIMIT_BACKOFF)
 
-    async def async_command(self, command: Awaitable[None]) -> None:
-        """Run a remote command and schedule a single follow-up refresh.
+    async def async_command(self, vin: str, command: Awaitable[None]) -> None:
+        """Run a remote command and schedule a single follow-up refresh of that vehicle.
 
         Commands count against the same request quota as polling, so instead of
         refreshing after every call this waits a moment for the vehicle and refreshes once.
@@ -122,6 +187,7 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         except SkodaApiError as err:
             raise HomeAssistantError(f"The vehicle did not accept the request: {err}") from err
 
+        self._force.add(vin)
         if self._cancel_refresh:
             self._cancel_refresh()
         self._cancel_refresh = async_call_later(

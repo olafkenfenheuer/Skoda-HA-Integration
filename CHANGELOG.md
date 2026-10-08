@@ -5,6 +5,16 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1]
+
+### Added
+
+- **Per-vehicle polling intervals**: each vehicle gets `number` entities "Polling interval" and
+  "Polling interval while charging" (5-120 min). A vehicle is polled at its shorter charging
+  interval while it is charging. Changes apply immediately without a reload and are stored in the
+  entry options. New option "Polling interval while charging" (default 5 min) sets the default.
+- A command now refreshes only the vehicle it was sent to.
+
 ## [0.3.0]
 
 ### Changed

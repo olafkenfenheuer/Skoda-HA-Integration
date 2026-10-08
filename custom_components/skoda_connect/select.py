@@ -52,5 +52,6 @@ class SkodaChargeModeSelect(SkodaVehicleEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the charge mode."""
         await self.coordinator.async_command(
+            self.vin,
             self.coordinator.api.set_charge_mode(self.vin, option)
         )

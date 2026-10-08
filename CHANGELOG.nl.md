@@ -5,6 +5,16 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1]
+
+### Toegevoegd
+
+- **Pollinginterval per voertuig**: elk voertuig krijgt `number`-entiteiten "Pollinginterval" en
+  "Pollinginterval tijdens laden" (5-120 min). Tijdens het laden wordt het kortere interval gebruikt.
+  Wijzigingen werken direct zonder herladen. Nieuwe optie "Pollinginterval tijdens laden"
+  (standaard 5 min) stelt de standaardwaarde in.
+- Een commando ververst nu alleen het voertuig waarvoor het bedoeld was.
+
 ## [0.3.0]
 
 ### Gewijzigd
