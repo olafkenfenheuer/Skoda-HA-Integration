@@ -135,31 +135,54 @@ class SkodaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for a new API key (and the VINs, for entries created before API keys)."""
-        errors: dict[str, str] = {}
         assert self._reauth_entry is not None
-        old_vins = self._reauth_entry.data.get(CONF_VINS) or []
+        return await self._async_credentials_step(
+            "reauth_confirm", self._reauth_entry, user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user enter a new API key (or change the VINs) at any time."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+        return await self._async_credentials_step("reconfigure", entry, user_input)
+
+    async def _async_credentials_step(
+        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Validate a new API key / VIN list and store it on an existing entry."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            vins, error = await self._validate_input(
-                {CONF_API_KEY: user_input[CONF_API_KEY], CONF_VINS: user_input[CONF_VINS]}
-            )
+            vins, error = await self._validate_input(user_input)
+            unique_id = ",".join(sorted(vins))
+            if not error and any(
+                other.entry_id != entry.entry_id and other.unique_id == unique_id
+                for other in self._async_current_entries(include_ignore=False)
+            ):
+                error = "already_configured"
             if error:
                 errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    unique_id=",".join(sorted(vins)),
+                    entry,
+                    unique_id=unique_id,
                     title=", ".join(vins),
-                    data={CONF_API_KEY: user_input[CONF_API_KEY].strip(), CONF_VINS: vins},
+                    data={
+                        CONF_API_KEY: user_input[CONF_API_KEY].strip(),
+                        CONF_VINS: vins,
+                    },
                 )
 
         schema = vol.Schema(
             {vol.Required(CONF_API_KEY): str, vol.Required(CONF_VINS): str}
         )
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
-                schema, {CONF_VINS: ", ".join(old_vins)}
+                schema,
+                user_input or {CONF_VINS: ", ".join(entry.data.get(CONF_VINS) or [])},
             ),
             errors=errors,
             description_placeholders={"api_keys_url": API_KEYS_URL},

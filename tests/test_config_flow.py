@@ -102,6 +102,56 @@ async def test_reauth_from_legacy_entry(hass: HomeAssistant) -> None:
     assert entry.data == {CONF_API_KEY: "newkey", CONF_VINS: [VIN]}
 
 
+async def test_reconfigure_new_api_key(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=VIN, data={CONF_API_KEY: "old", CONF_VINS: [VIN]}
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    with patch(GET, new=AsyncMock(return_value=make_vehicle())), patch(SETUP, return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: " new ", CONF_VINS: VIN}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_API_KEY: "new", CONF_VINS: [VIN]}
+
+
+async def test_reconfigure_invalid_key_keeps_entry(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=VIN, data={CONF_API_KEY: "old", CONF_VINS: [VIN]}
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(GET, new=AsyncMock(side_effect=SkodaAuthError("expired"))):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "bad", CONF_VINS: VIN}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert entry.data[CONF_API_KEY] == "old"
+
+
+async def test_reconfigure_rejects_vins_of_other_entry(hass: HomeAssistant) -> None:
+    other = MockConfigEntry(
+        domain=DOMAIN, unique_id=VIN2, data={CONF_API_KEY: "k2", CONF_VINS: [VIN2]}
+    )
+    other.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=VIN, data={CONF_API_KEY: "old", CONF_VINS: [VIN]}
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(GET, new=AsyncMock(return_value=make_vehicle())):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new", CONF_VINS: VIN2}
+        )
+    assert result["errors"] == {"base": "already_configured"}
+    assert entry.data[CONF_API_KEY] == "old"
+
+
 async def test_options_flow_keeps_vehicle_intervals(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,

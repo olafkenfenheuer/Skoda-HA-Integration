@@ -88,6 +88,10 @@ This documentation itself is available in [English](README.md),
 5. After setup, open the integration's **Configure** dialog to change the polling interval
    (5-1440 minutes, default 10), the shorter interval used **while charging** (default 5), or enable read-only mode.
 
+You can replace the API key (or change the VINs) at any time - before it expires, or after creating a
+new one - via **Settings → Devices & Services → Škoda Connect → ⋮ → Reconfigure**. The entry is reloaded
+and keeps its entities, history and options.
+
 When the key expires (the API reports `api-key-expired`) Home Assistant shows a
 "reauthenticate" notification - create a new key and enter it to restore the connection
 without losing entity history.

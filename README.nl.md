@@ -80,6 +80,10 @@ Ook deze documentatie is beschikbaar in het [Engels](README.md), het
 4. Via **Configureren** wijzig je het pollinginterval (5-1440 minuten, standaard 10) of zet je
    de alleen-lezen-modus aan.
 
+Je kunt de API-sleutel (of de VIN's) op elk moment vervangen - vóór het verlopen of nadat je een nieuwe
+hebt aangemaakt - via **Instellingen → Apparaten & services → Škoda Connect → ⋮ → Opnieuw configureren**.
+De invoer wordt herladen en behoudt entiteiten, geschiedenis en opties.
+
 Verloopt de sleutel, dan vraagt Home Assistant om opnieuw te verifiëren: maak een nieuwe sleutel
 aan en voer die in.
 

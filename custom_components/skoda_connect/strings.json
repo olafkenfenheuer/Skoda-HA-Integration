@@ -16,17 +16,27 @@
           "api_key": "API key",
           "vins": "VIN(s)"
         }
+      },
+      "reconfigure": {
+        "title": "Change the Škoda Connect API key",
+        "description": "Enter a new API key from the MyŠkoda app ({api_keys_url}), e.g. before the current one expires. You can also change the VIN(s).",
+        "data": {
+          "api_key": "API key",
+          "vins": "VIN(s)"
+        }
       }
     },
     "error": {
       "invalid_auth": "The API key is invalid, expired or not authorized for this vehicle.",
       "invalid_vin": "Enter valid 17-character VINs, separated by commas.",
       "cannot_connect": "Could not connect to Škoda Connect. Please try again later.",
-      "rate_limited": "Škoda Connect API rate limit reached. Please wait a while before trying again."
+      "rate_limited": "Škoda Connect API rate limit reached. Please wait a while before trying again.",
+      "already_configured": "This vehicle selection is already configured by another entry."
     },
     "abort": {
       "already_configured": "This vehicle selection is already configured.",
-      "reauth_successful": "Reauthentication was successful."
+      "reauth_successful": "Reauthentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful."
     }
   },
   "options": {

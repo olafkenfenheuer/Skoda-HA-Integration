@@ -14,7 +14,8 @@ Default branch: `main`. Unofficial project - not affiliated with Škoda Auto.
   - `coordinator.py` - `SkodaDataUpdateCoordinator`: per-vehicle polling schedule, rate-limit backoff,
     `async_command()` (read-only check, error mapping, forced single refresh of the vehicle after 30 s)
   - `config_flow.py` - API key + VIN list (comma separated), reauth (also used to migrate 0.2.x entries
-    that still hold email/password), options flow (intervals, read-only)
+    that still hold email/password) and reconfigure (new API key / VINs at any time; both share
+    `_async_credentials_step`), options flow (intervals, read-only)
   - `entity.py` - `SkodaVehicleEntity` base; platforms: `sensor`, `binary_sensor`, `device_tracker`,
     `climate`, `switch`, `number`, `select`; `diagnostics.py`
   - `strings.json` is a copy of `translations/en.json`; translations exist for en/de/nl/fr/cs/sk

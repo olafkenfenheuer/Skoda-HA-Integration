@@ -16,17 +16,27 @@
           "api_key": "Kľúč API",
           "vins": "VIN"
         }
+      },
+      "reconfigure": {
+        "title": "Zmena kľúča API Škoda Connect",
+        "description": "Zadajte nový kľúč API z aplikácie MyŠkoda ({api_keys_url}), napr. pred vypršaním aktuálneho. Môžete zmeniť aj VIN.",
+        "data": {
+          "api_key": "Kľúč API",
+          "vins": "VIN"
+        }
       }
     },
     "error": {
       "invalid_auth": "Kľúč API je neplatný, vypršal alebo nemá oprávnenie pre toto vozidlo.",
       "invalid_vin": "Zadajte platné 17-miestne VIN oddelené čiarkami.",
       "cannot_connect": "Nepodarilo sa pripojiť k Škoda Connect. Skúste to prosím neskôr.",
-      "rate_limited": "Bol dosiahnutý limit požiadaviek API Škoda Connect. Chvíľu počkajte a skúste to znova."
+      "rate_limited": "Bol dosiahnutý limit požiadaviek API Škoda Connect. Chvíľu počkajte a skúste to znova.",
+      "already_configured": "Tento výber vozidiel je už nakonfigurovaný v inom zázname."
     },
     "abort": {
       "already_configured": "Tento výber vozidiel je už nakonfigurovaný.",
-      "reauth_successful": "Opätovné overenie prebehlo úspešne."
+      "reauth_successful": "Opätovné overenie prebehlo úspešne.",
+      "reconfigure_successful": "Prekonfigurovanie prebehlo úspešne."
     }
   },
   "options": {

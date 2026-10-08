@@ -91,6 +91,10 @@ Diese Dokumentation gibt es auf [Englisch](README.md), [Deutsch](README.de.md) u
    (5–1440 Minuten, Standard 10), das kürzere Intervall **während des Ladens** (Standard 5) oder den
    Nur-Lese-Modus einstellen.
 
+Den API-Schlüssel (oder die VINs) kannst du jederzeit ersetzen – vor dem Ablauf oder nachdem du einen
+neuen erstellt hast – unter **Einstellungen → Geräte & Dienste → Škoda Connect → ⋮ → Neu konfigurieren**.
+Der Eintrag wird neu geladen und behält Entitäten, Verlauf und Optionen.
+
 Läuft der Schlüssel ab (die API meldet `api-key-expired`), zeigt Home Assistant eine
 Benachrichtigung zur erneuten Authentifizierung an. Erstelle einen neuen Schlüssel und gib ihn ein,
 um die Verbindung wiederherzustellen, ohne den Verlauf der Entitäten zu verlieren.

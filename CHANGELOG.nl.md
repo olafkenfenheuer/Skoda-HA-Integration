@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.3]
+
+### Toegevoegd
+
+- **Herconfiguratie**: een nieuwe API-sleutel (en de VIN-lijst) kan op elk moment worden ingevoerd via
+  *Opnieuw configureren* bij de integratie, bijv. voordat de huidige sleutel verloopt. De sleutel wordt
+  eerst gevalideerd; entiteiten, geschiedenis en opties blijven behouden.
+
 ## [0.3.2]
 
 ### Toegevoegd

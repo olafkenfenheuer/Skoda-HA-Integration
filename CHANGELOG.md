@@ -5,6 +5,14 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.3]
+
+### Added
+
+- **Reconfigure flow**: a new API key (and the VIN list) can be entered at any time via
+  *Reconfigure* on the integration entry, e.g. before the current key expires. The key is validated
+  first; entities, history and options are kept.
+
 ## [0.3.2]
 
 ### Added
