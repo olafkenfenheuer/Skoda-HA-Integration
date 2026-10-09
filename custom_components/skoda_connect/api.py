@@ -8,13 +8,14 @@ from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Any
 
-from aiohttp import ClientError, ClientResponse, ClientSession
+from aiohttp import ClientError, ClientResponse, ClientSession, ClientTimeout
 
 from .const import API_BASE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
 PROBLEM_BASE = f"{API_BASE_URL}/problems/"
+REQUEST_TIMEOUT = ClientTimeout(total=30)
 
 
 class SkodaApiError(Exception):
@@ -125,6 +126,7 @@ class SkodaApi:
                 url,
                 json=json,
                 params=params,
+                timeout=REQUEST_TIMEOUT,
                 headers={"X-API-Key": self._api_key, "Accept": "application/json"},
             ) as response:
                 if response.status < 400:
@@ -137,9 +139,14 @@ class SkodaApi:
                     )
                     if response.content_length == 0 or response.status == 202:
                         return None
-                    return await response.json(content_type=None)
+                    try:
+                        return await response.json(content_type=None)
+                    except ValueError as err:
+                        raise SkodaApiError(
+                            "The MyŠkoda API returned an invalid response", status=response.status
+                        ) from err
                 raise await self._error_for(response)
-        except ClientError as err:
+        except (ClientError, TimeoutError) as err:
             raise SkodaConnectionError(f"Cannot reach the MyŠkoda API: {err}") from err
 
     @staticmethod

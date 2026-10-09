@@ -5,6 +5,17 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.10]
+
+### Opgelost
+
+- Verzoeken hebben nu een time-out van 30 seconden; time-outs en ongeldige antwoorden worden gemeld als
+  verbindings-/API-fout in plaats van als onafgehandelde uitzondering.
+- Tijdens een rate-limit-pauze of een andere mislukte poll behouden de entiteiten hun laatst bekende
+  status in plaats van niet beschikbaar te worden. De sensor "API-status" toont de fout.
+- De in Home Assistant ingestelde doeltemperatuur van de airco overschrijft geen waarde meer die elders
+  is gewijzigd (bijv. in de MyŠkoda-app).
+
 ## [0.3.9]
 
 ### Gewijzigd
