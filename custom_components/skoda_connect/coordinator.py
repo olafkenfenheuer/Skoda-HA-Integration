@@ -41,7 +41,11 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION = 1
 STORAGE_SAVE_DELAY = 60
-MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
+# Without a wait time from the API, pause this long after a rate limit.
+DEFAULT_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
+MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=1)
+# Added to the wait time reported by the API so the first request after it is not rejected again.
+RATE_LIMIT_MARGIN = timedelta(seconds=30)
 MAX_RATE_LIMIT_BACKOFF = timedelta(hours=1)
 # A vehicle counts as due slightly early so scheduler jitter never skips a whole tick.
 DUE_TOLERANCE_SECONDS = 10
@@ -134,6 +138,8 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         self._cancel_refresh: CALLBACK_TYPE | None = None
         self._last_fetch: dict[str, float] = {}
         self._force: set[str] = set()
+        # Per vehicle: time.monotonic() until which polling is paused after a rate limit.
+        self._paused_until: dict[str, float] = {}
         # Result of the last poll per vehicle, and the last time a poll succeeded.
         self.poll_results: dict[str, PollResult] = {}
         self.last_success: dict[str, datetime] = {}
@@ -215,13 +221,22 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         kind = "charging" if self.uses_charging_interval(vin) else "idle"
         return timedelta(minutes=self.interval_minutes(vin, kind))
 
+    def _delay_for(self, vin: str) -> timedelta:
+        """Return the time until the vehicle is polled next: its interval, or the pause."""
+        remaining = self._paused_until.get(vin, 0) - time.monotonic()
+        if remaining > 0:
+            return timedelta(seconds=remaining + 1)
+        return self._interval_for(vin)
+
     def _shortest_interval(self) -> timedelta:
-        return min(self._interval_for(vin) for vin in self.vins)
+        return min(self._delay_for(vin) for vin in self.vins)
 
     def _is_due(self, vin: str) -> bool:
-        if vin in self._force or not self.data or vin not in self.data.vehicles:
+        if not self.data or vin not in self.data.vehicles:
             return True
-        if vin not in self._last_fetch:
+        if time.monotonic() < self._paused_until.get(vin, 0):
+            return False  # rate limited: wait for the quota instead of requesting again
+        if vin in self._force or vin not in self._last_fetch:
             return True
         elapsed = time.monotonic() - self._last_fetch[vin]
         return elapsed >= self._interval_for(vin).total_seconds() - DUE_TOLERANCE_SECONDS
@@ -262,18 +277,24 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
                 raise ConfigEntryAuthFailed(str(result)) from result
             if isinstance(result, SkodaRateLimitError):
                 backoff = self._rate_limit_backoff(result)
+                self._paused_until[vin] = time.monotonic() + backoff.total_seconds()
                 _LOGGER.warning(
-                    "Škoda Connect API rate limit hit; pausing polling for %s", backoff
+                    "Škoda Connect API rate limit hit; pausing polling of a vehicle for %s",
+                    backoff,
                 )
-                if not self.data and (cached := await self._async_load_cached()):
-                    # Startup during a rate limit: set up with the last known state instead of
-                    # failing the setup, and poll again once the quota is back.
-                    self.update_interval = backoff
-                    return cached
-                raise UpdateFailed(
-                    "Škoda Connect API rate limit reached; backing off",
-                    retry_after=backoff.total_seconds(),
-                ) from result
+                if not self.data:
+                    if cached := await self._async_load_cached():
+                        # Startup during a rate limit: set up with the last known state
+                        # instead of failing the setup, and poll again once the quota is back.
+                        self.update_interval = self._shortest_interval()
+                        return cached
+                    raise UpdateFailed(
+                        "Škoda Connect API rate limit reached; backing off",
+                        retry_after=backoff.total_seconds(),
+                    ) from result
+                # Not an error: keep the last known state and poll again after the pause.
+                vehicles[vin] = self.data.vehicles[vin]
+                continue
             if isinstance(result, Exception):
                 failures.append(result)
                 # Keep the last known state for a vehicle whose request failed.
@@ -301,7 +322,9 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
 
     @staticmethod
     def _rate_limit_backoff(err: SkodaRateLimitError) -> timedelta:
-        backoff = err.retry_after if err.retry_after is not None else MIN_RATE_LIMIT_BACKOFF
+        if err.retry_after is None:
+            return DEFAULT_RATE_LIMIT_BACKOFF
+        backoff = err.retry_after + RATE_LIMIT_MARGIN
         return min(max(backoff, MIN_RATE_LIMIT_BACKOFF), MAX_RATE_LIMIT_BACKOFF)
 
     async def async_command(self, vin: str, command: Awaitable[None]) -> None:

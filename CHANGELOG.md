@@ -9,6 +9,9 @@ All notable changes to this integration are documented here. The format follows
 
 ### Fixed
 
+- A rate limit (HTTP 429) is no longer logged as an error: the integration keeps the last known state,
+  pauses polling of that vehicle for the time the API reports plus 30 seconds (instead of at least
+  15 minutes) and polls again right after the quota is back.
 - After a rate limit (HTTP 429) the integration now pauses for the time the API reports (the
   `RateLimit-Reset` header or "Retry after N seconds" in the error message, up to one hour). The API
   sends no `Retry-After` header, so previously the fixed 15 minute minimum was used and the integration

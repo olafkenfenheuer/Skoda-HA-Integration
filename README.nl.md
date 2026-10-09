@@ -119,7 +119,7 @@ De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). E
 - is het standaardinterval 10 minuten (minimaal 3; 3 minuten gebruiken al de hele limiet van 20 verzoeken per uur, zonder ruimte voor commando's) en 5 minuten tijdens het laden (of bij aangesloten kabel, als je die optie aanzet);
 - wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
 - worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd voor de door de API gemelde wachttijd (`Retry-After`,
-  `RateLimit-Reset` of foutmelding; minimaal 15 minuten, maximaal 1 uur);
+  `RateLimit-Reset` of foutmelding; plus 30 seconden; maximaal 1 uur, 15 minuten als de API geen wachttijd geeft);
 - blijft de laatst bekende status van een voertuig behouden als alleen zijn verzoek mislukt.
 
 ## Ontwikkeling

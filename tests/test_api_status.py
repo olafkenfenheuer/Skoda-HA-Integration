@@ -69,6 +69,7 @@ async def test_status_after_failure_stays_available(
     await hass.async_block_till_done()
     assert hass.states.get(_status_id(hass)).state == "rate_limited"
 
+    coordinator._paused_until.clear()  # a rate limit pauses polling of the vehicle
     mock_get_vehicle.side_effect = SkodaAuthError("expired", status=401, problem="api-key-expired")
     await coordinator.async_refresh()
     await hass.async_block_till_done()

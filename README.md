@@ -141,7 +141,7 @@ integration:
 - Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so
   it schedules a single refresh 30 seconds after the last command.
 - Detects HTTP 429 responses and pauses polling, for the wait time reported by the API (`Retry-After`, `RateLimit-Reset` or the error
-  message; at least 15 minutes, at most 1 hour), and logs a warning when this happens.
+  message, plus 30 seconds; at most 1 hour, 15 minutes if the API gives no wait time), and logs a warning when this happens.
 - Keeps the last known state of a vehicle if only its request failed.
 
 Parts of the vehicle the API cannot report (for example because the vehicle is asleep) are

@@ -9,6 +9,9 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Opgelost
 
+- Een rate limit (HTTP 429) wordt niet meer als fout gelogd: de integratie behoudt de laatst bekende
+  status, pauzeert het pollen van dat voertuig voor de door de API gemelde tijd plus 30 seconden (in
+  plaats van minimaal 15 minuten) en pollt direct weer zodra het quotum terug is.
 - Na een rate limit (HTTP 429) pauzeert de integratie nu zo lang als de API aangeeft (de header
   `RateLimit-Reset` of "Retry after N seconds" in de foutmelding, maximaal een uur). De API stuurt geen
   `Retry-After`-header, waardoor eerder het vaste minimum van 15 minuten gold en de integratie de limiet

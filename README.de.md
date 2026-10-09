@@ -141,7 +141,7 @@ Ein Poll kostet eine Anfrage pro Fahrzeug, jeder Fernbefehl eine weitere. Deshal
 - Nach Befehlen wird nicht jedes Mal aktualisiert; Befehle werden asynchron angenommen (HTTP 202),
   daher wird 30 Sekunden nach dem letzten Befehl einmal aktualisiert.
 - HTTP-429-Antworten werden erkannt und das Polling pausiert, für die von der API genannte Wartezeit
-  (`Retry-After`, `RateLimit-Reset` oder Fehlermeldung; mindestens 15 Minuten, höchstens 1 Stunde); dabei wird eine Warnung protokolliert.
+  (`Retry-After`, `RateLimit-Reset` oder Fehlermeldung; zuzüglich 30 Sekunden; höchstens 1 Stunde, 15 Minuten ohne Angabe der API); dabei wird eine Warnung protokolliert.
 - Der zuletzt bekannte Zustand eines Fahrzeugs bleibt erhalten, wenn nur seine Anfrage fehlschlägt.
 
 Teile des Fahrzeugs, die die API nicht melden kann (zum Beispiel weil das Fahrzeug schläft), fehlen
