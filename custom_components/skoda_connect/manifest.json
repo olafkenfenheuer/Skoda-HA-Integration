@@ -7,10 +7,10 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/max1weber/skoda-ha-integration",
-  "integration_type": "hub",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/max1weber/skoda-ha-integration/issues",
   "loggers": [],
   "requirements": [],
-  "version": "0.3.6"
+  "version": "0.3.7"
 }
