@@ -139,7 +139,7 @@
     },
     "button": {
       "refresh": {
-        "name": "Actualiser maintenant"
+        "name": "Interroger l'API maintenant"
       }
     },
     "device_tracker": {

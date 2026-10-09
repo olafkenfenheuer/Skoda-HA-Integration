@@ -139,7 +139,7 @@
     },
     "button": {
       "refresh": {
-        "name": "Aktualizovať teraz"
+        "name": "Dopytovať API teraz"
       }
     },
     "device_tracker": {

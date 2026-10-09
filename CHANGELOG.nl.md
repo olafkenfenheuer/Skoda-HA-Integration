@@ -26,7 +26,7 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Toegevoegd
 
-- Knop "Nu verversen" per voertuig: vraagt het voertuig direct op. Kost één verzoek van het
+- Knop "API nu opvragen" per voertuig: vraagt de MyŠkoda-API direct op voor het voertuig. Kost één verzoek van het
   API-quotum en wordt met een melding geweigerd tijdens een rate limit.
 - Pictogrammen voor de kilometerstand, laadsnelheid, kofferbak, motorkap en de twee pollinginterval-entiteiten
   (nieuw `icons.json`).

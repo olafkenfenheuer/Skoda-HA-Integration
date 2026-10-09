@@ -139,7 +139,7 @@
     },
     "button": {
       "refresh": {
-        "name": "Refresh now"
+        "name": "Poll API now"
       }
     },
     "device_tracker": {

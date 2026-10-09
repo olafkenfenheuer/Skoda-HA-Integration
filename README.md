@@ -23,7 +23,7 @@ an options flow, reauthentication support, and a diagnostics download.
 | `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
 | `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |
 | `switch` | Start/stop charging |
-| `button` | Refresh now (polls the vehicle immediately; costs one request of the API quota and is refused while the API is rate limited) |
+| `button` | Poll API now (queries the MyŠkoda API for the vehicle immediately; costs one request of the API quota and is refused while the API is rate limited) |
 | `number` | Charge limit (target state of charge), per-vehicle polling intervals (normal / while charging) |
 | `select` | Charge mode |
 

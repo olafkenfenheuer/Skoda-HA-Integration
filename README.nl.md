@@ -20,7 +20,7 @@ externe client-bibliotheek.
 | `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
 | `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
 | `switch` | Laden starten/stoppen |
-| `button` | Nu verversen (vraagt het voertuig direct op; kost één verzoek van het API-quotum en wordt geweigerd tijdens een rate limit) |
+| `button` | API nu opvragen (vraagt de MyŠkoda-API direct op voor het voertuig; kost één verzoek van het API-quotum en wordt geweigerd tijdens een rate limit) |
 | `number` | Laadlimiet (doel-laadniveau), pollinginterval per voertuig (normaal / tijdens laden) |
 | `select` | Laadmodus |
 

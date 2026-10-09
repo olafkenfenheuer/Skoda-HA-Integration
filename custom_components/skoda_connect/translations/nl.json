@@ -139,7 +139,7 @@
     },
     "button": {
       "refresh": {
-        "name": "Nu verversen"
+        "name": "API nu opvragen"
       }
     },
     "device_tracker": {

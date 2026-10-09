@@ -24,7 +24,7 @@ Options-Flow, Reauthentifizierung und Diagnose-Download.
 | `device_tracker` | Parkposition (erscheint auf dem Karten-Dashboard; während der Fahrt unbekannt) |
 | `climate` | Standklimatisierung (an/aus, aktive Belüftung, Zieltemperatur) |
 | `switch` | Laden starten/stoppen |
-| `button` | Jetzt aktualisieren (fragt das Fahrzeug sofort ab; kostet eine Anfrage des API-Kontingents und wird bei aktivem Rate-Limit abgelehnt) |
+| `button` | API jetzt abrufen (ruft die MyŠkoda-API für das Fahrzeug sofort ab; kostet eine Anfrage des API-Kontingents und wird bei aktivem Rate-Limit abgelehnt) |
 | `number` | Ladelimit (Ziel-Ladezustand), Abfrageintervalle pro Fahrzeug (normal / beim Laden) |
 | `select` | Lademodus |
 
