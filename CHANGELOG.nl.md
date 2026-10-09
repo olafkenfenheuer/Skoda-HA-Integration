@@ -19,6 +19,11 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
   laatst bekende voertuigstatus wordt opgeslagen en gebruikt totdat het quotum weer beschikbaar is (de
   API-statussensor toont `rate_limited`). Het pollen hervat na de door de API gemelde wachttijd.
 
+### Gewijzigd
+
+- De schakelaar per voertuig "Laadinterval bij aangesloten kabel" heet nu "Snel pollen als kabel is
+  aangesloten" en heeft een eigen pictogram (`mdi:power-plug-battery`); het gedrag is ongewijzigd.
+
 ### Toegevoegd
 
 - Knop "Nu verversen" per voertuig: vraagt het voertuig direct op. Kost één verzoek van het

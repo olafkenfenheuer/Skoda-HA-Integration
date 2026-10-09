@@ -157,7 +157,7 @@
         "name": "Laden"
       },
       "poll_when_plugged_in": {
-        "name": "Laadinterval bij aangesloten kabel"
+        "name": "Snel pollen als kabel is aangesloten"
       }
     },
     "number": {

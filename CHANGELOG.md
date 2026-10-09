@@ -17,6 +17,11 @@ All notable changes to this integration are documented here. The format follows
   last known vehicle state is stored and used until the quota is back (the API status sensor shows
   `rate_limited`). Polling resumes after the wait time reported by the API.
 
+### Changed
+
+- The per-vehicle switch "Charging interval while plugged in" is now called "Fast polling while plugged in"
+  and has its own icon (`mdi:power-plug-battery`); its behavior is unchanged.
+
 ### Added
 
 - Button "Refresh now" per vehicle: polls the vehicle immediately. It costs one request of the API

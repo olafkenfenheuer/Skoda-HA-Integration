@@ -157,7 +157,7 @@
         "name": "Charging"
       },
       "poll_when_plugged_in": {
-        "name": "Charging interval while plugged in"
+        "name": "Fast polling while plugged in"
       }
     },
     "number": {

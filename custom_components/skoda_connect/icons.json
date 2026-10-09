@@ -28,6 +28,11 @@
       "refresh": {
         "default": "mdi:refresh"
       }
+    },
+    "switch": {
+      "poll_when_plugged_in": {
+        "default": "mdi:power-plug-battery"
+      }
     }
   }
 }

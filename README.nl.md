@@ -108,7 +108,7 @@ is aangesloten) wordt het laadinterval gebruikt; na het starten van het laden ka
 normaal interval duren voordat het sneller pollen begint (laden starten via Home Assistant ververst
 na 30 seconden meteen).
 
-De schakelaar **Laadinterval bij aangesloten kabel** (categorie configuratie) doet hetzelfde per voertuig
+De schakelaar **Snel pollen als kabel is aangesloten** (categorie configuratie) doet hetzelfde per voertuig
 en overschrijft voor dat voertuig de algemene optie.
 
 ### Rate limits

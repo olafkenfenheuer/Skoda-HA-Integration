@@ -157,7 +157,7 @@
         "name": "Laden"
       },
       "poll_when_plugged_in": {
-        "name": "Ladeintervall bei eingestecktem Kabel"
+        "name": "Wenn eingesteckt schnell abfragen"
       }
     },
     "number": {

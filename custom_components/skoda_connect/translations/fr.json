@@ -157,7 +157,7 @@
         "name": "Charge"
       },
       "poll_when_plugged_in": {
-        "name": "Intervalle de charge câble branché"
+        "name": "Interrogation rapide quand branché"
       }
     },
     "number": {

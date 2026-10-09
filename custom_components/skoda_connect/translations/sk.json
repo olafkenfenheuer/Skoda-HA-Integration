@@ -157,7 +157,7 @@
         "name": "Nabíjanie"
       },
       "poll_when_plugged_in": {
-        "name": "Interval nabíjania pri zapojenom kábli"
+        "name": "Rýchle dopytovanie pri zapojenom kábli"
       }
     },
     "number": {

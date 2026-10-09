@@ -125,7 +125,7 @@ plugged in. After a charge starts it can take up to one normal interval until th
 in; starting charging from Home Assistant refreshes the vehicle after 30 seconds, so it switches over
 right away.
 
-The switch **Charging interval while plugged in** (configuration category) does the same per vehicle:
+The switch **Fast polling while plugged in** (configuration category) does the same per vehicle:
 it overrides the global option for that vehicle.
 
 ### Rate limits
