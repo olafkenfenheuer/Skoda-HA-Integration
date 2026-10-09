@@ -69,6 +69,8 @@ class PollResult:
     error: str | None = None
     http_status: int | None = None
     problem: str | None = None
+    # When the request quota is available again (only after a rate limit, HTTP 429).
+    retry_at: datetime | None = None
     # Parts of the vehicle the API reported as unavailable ("partial" results).
     omitted: list[str] = field(default_factory=list)
 
@@ -87,12 +89,14 @@ def _poll_result(result: SkodaVehicle | Exception) -> PollResult:
         status = STATUS_CONNECTION_ERROR
     else:
         status = STATUS_API_ERROR
+    retry_after = getattr(result, "retry_after", None)
     return PollResult(
         status,
         now,
         error=str(result),
         http_status=getattr(result, "status", None),
         problem=getattr(result, "problem", None),
+        retry_at=now + retry_after if retry_after is not None else None,
     )
 
 

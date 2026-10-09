@@ -270,6 +270,8 @@ class SkodaApiStatusSensor(SkodaVehicleEntity, SensorEntity):
             attributes["http_status"] = result.http_status
         if result.problem:
             attributes["problem"] = result.problem
+        if result.retry_at:
+            attributes["retry_at"] = result.retry_at
         if result.omitted:
             attributes["omitted_parts"] = result.omitted
         return attributes

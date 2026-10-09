@@ -14,6 +14,11 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
   `Retry-After`-header, waardoor eerder het vaste minimum van 15 minuten gold en de integratie de limiet
   bleef raken terwijl het quotum nog op was.
 
+### Toegevoegd
+
+- De sensor "API-status" heeft een nieuw attribuut `retry_at`: na een rate limit toont het wanneer het
+  quotum weer beschikbaar is.
+
 ## [0.3.10]
 
 ### Opgelost

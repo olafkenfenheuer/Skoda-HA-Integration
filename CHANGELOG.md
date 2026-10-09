@@ -14,6 +14,11 @@ All notable changes to this integration are documented here. The format follows
   sends no `Retry-After` header, so previously the fixed 15 minute minimum was used and the integration
   kept hitting the limit while the quota was still exhausted.
 
+### Added
+
+- The "API status" sensor has a new attribute `retry_at`: after a rate limit it shows when the request
+  quota is available again.
+
 ## [0.3.10]
 
 ### Fixed

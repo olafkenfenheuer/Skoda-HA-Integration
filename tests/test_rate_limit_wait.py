@@ -24,3 +24,21 @@ def test_detail_fallback() -> None:
 
 def test_unknown() -> None:
     assert _rate_limit_wait({}, "Too Many Requests") is None
+
+
+def test_poll_result_has_retry_at_after_rate_limit() -> None:
+    from custom_components.skoda_connect.api import SkodaRateLimitError
+    from custom_components.skoda_connect.coordinator import _poll_result
+
+    result = _poll_result(
+        SkodaRateLimitError("x", status=429, retry_after=timedelta(seconds=2740))
+    )
+    assert result.retry_at is not None
+    assert result.retry_at - result.time == timedelta(seconds=2740)
+
+
+def test_poll_result_without_rate_limit_has_no_retry_at() -> None:
+    from custom_components.skoda_connect.api import SkodaApiError
+    from custom_components.skoda_connect.coordinator import _poll_result
+
+    assert _poll_result(SkodaApiError("x", status=500)).retry_at is None
