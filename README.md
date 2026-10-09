@@ -18,7 +18,7 @@ an options flow, reauthentication support, and a diagnostics download.
 
 | Platform | Entities |
 |---|---|
-| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, target temperature, address of the parking position, name of the charging location profile currently active |
+| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, target temperature, address of the parking position, name of the charging location profile currently active, API status (result of the last poll, diagnostic) |
 | `binary_sensor` | Doors, windows, trunk, bonnet, lights, central locking, charging, charging cable plugged in, vehicle at saved charging location |
 | `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
 | `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |

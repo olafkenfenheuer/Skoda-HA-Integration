@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,11 +20,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import SkodaVehicle as Vehicle
-from .coordinator import SkodaConfigEntry, SkodaDataUpdateCoordinator
+from .coordinator import POLL_STATUSES, PollResult, SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
 
 
@@ -193,6 +195,7 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS:
             if description.exists_fn(vehicle):
                 entities.append(SkodaSensor(coordinator, vin, description))
+        entities.append(SkodaApiStatusSensor(coordinator, vin))
     async_add_entities(entities)
 
 
@@ -219,3 +222,51 @@ class SkodaSensor(SkodaVehicleEntity, SensorEntity):
             return self.entity_description.value_fn(self.vehicle)
         except (KeyError, TypeError):
             return None
+
+
+class SkodaApiStatusSensor(SkodaVehicleEntity, SensorEntity):
+    """Shows the result of the last API request that polled the vehicle."""
+
+    _attr_translation_key = "api_status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = POLL_STATUSES
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: SkodaDataUpdateCoordinator, vin: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vin)
+        self._attr_unique_id = f"{vin}_api_status"
+
+    @property
+    def available(self) -> bool:
+        """Stay available while polling fails - that is when the status matters most."""
+        return True
+
+    @property
+    def _result(self) -> PollResult | None:
+        return self.coordinator.poll_results.get(self.vin)
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the outcome of the last poll."""
+        result = self._result
+        return result.status if result else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return when the last poll happened and what went wrong, if anything."""
+        attributes: dict[str, Any] = {}
+        if (last_success := self.coordinator.last_success.get(self.vin)) is not None:
+            attributes["last_success"] = last_success
+        if (result := self._result) is None:
+            return attributes
+        attributes["last_poll"] = result.time
+        if result.error:
+            attributes["error"] = result.error
+        if result.http_status is not None:
+            attributes["http_status"] = result.http_status
+        if result.problem:
+            attributes["problem"] = result.problem
+        if result.omitted:
+            attributes["omitted_parts"] = result.omitted
+        return attributes

@@ -5,6 +5,15 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.6]
+
+### Toegevoegd
+
+- Diagnostische sensor "API-status" per voertuig met het resultaat van de laatste poll: `ok`, `partial`
+  (API liet delen weg), `auth_error`, `rate_limited`, `connection_error` of `api_error`. Attributen:
+  `last_poll`, `last_success`, `error`, `http_status`, `problem`, `omitted_parts`. De sensor blijft
+  beschikbaar terwijl het pollen mislukt.
+
 ## [0.3.5]
 
 ### Toegevoegd

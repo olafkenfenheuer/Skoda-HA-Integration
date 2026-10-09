@@ -5,6 +5,15 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.6]
+
+### Added
+
+- Diagnostic sensor "API status" per vehicle showing the result of the last poll: `ok`, `partial`
+  (API omitted some parts), `auth_error`, `rate_limited`, `connection_error` or `api_error`.
+  Attributes: `last_poll`, `last_success`, `error`, `http_status`, `problem`, `omitted_parts`. The
+  sensor stays available while polling fails.
+
 ## [0.3.5]
 
 ### Added

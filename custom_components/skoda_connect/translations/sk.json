@@ -89,6 +89,17 @@
       },
       "charging_location_profile": {
         "name": "Miesto nabíjania"
+      },
+      "api_status": {
+        "name": "Stav API",
+        "state": {
+          "ok": "OK",
+          "partial": "Čiastočne dostupné",
+          "auth_error": "Kľúč API odmietnutý",
+          "rate_limited": "Dosiahnutý limit",
+          "connection_error": "Chyba pripojenia",
+          "api_error": "Chyba API"
+        }
       }
     },
     "binary_sensor": {

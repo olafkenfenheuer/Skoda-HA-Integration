@@ -89,6 +89,17 @@
       },
       "charging_location_profile": {
         "name": "Laadlocatie"
+      },
+      "api_status": {
+        "name": "API-status",
+        "state": {
+          "ok": "OK",
+          "partial": "Gedeeltelijk beschikbaar",
+          "auth_error": "API-sleutel geweigerd",
+          "rate_limited": "Limiet bereikt",
+          "connection_error": "Verbindingsfout",
+          "api_error": "API-fout"
+        }
       }
     },
     "binary_sensor": {
