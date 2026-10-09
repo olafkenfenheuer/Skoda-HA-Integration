@@ -103,6 +103,9 @@
       },
       "last_poll": {
         "name": "Laatste poll"
+      },
+      "rate_limit_until": {
+        "name": "Rate limit tot"
       }
     },
     "binary_sensor": {

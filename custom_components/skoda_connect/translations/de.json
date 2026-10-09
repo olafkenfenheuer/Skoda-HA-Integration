@@ -103,6 +103,9 @@
       },
       "last_poll": {
         "name": "Letzter Abruf"
+      },
+      "rate_limit_until": {
+        "name": "Rate-Limit bis"
       }
     },
     "binary_sensor": {

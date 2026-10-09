@@ -103,6 +103,9 @@
       },
       "last_poll": {
         "name": "Poslední dotaz"
+      },
+      "rate_limit_until": {
+        "name": "Limit požadavků do"
       }
     },
     "binary_sensor": {

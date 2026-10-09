@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import SkodaVehicle as Vehicle
-from .coordinator import POLL_STATUSES, PollResult, SkodaConfigEntry, SkodaDataUpdateCoordinator
+from .coordinator import POLL_STATUSES, STATUS_RATE_LIMITED, PollResult, SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
 
 
@@ -198,6 +198,7 @@ async def async_setup_entry(
                 entities.append(SkodaSensor(coordinator, vin, description))
         entities.append(SkodaApiStatusSensor(coordinator, vin))
         entities.append(SkodaLastPollSensor(coordinator, vin))
+        entities.append(SkodaRateLimitUntilSensor(coordinator, vin))
     async_add_entities(entities)
 
 
@@ -305,3 +306,28 @@ class SkodaLastPollSensor(SkodaVehicleEntity, SensorEntity):
         """Return the time of the last attempt, which differs after a failed poll."""
         result = self.coordinator.poll_results.get(self.vin)
         return {"last_attempt": result.time} if result else {}
+
+
+class SkodaRateLimitUntilSensor(SkodaVehicleEntity, SensorEntity):
+    """Shows when the request quota is available again after a rate limit (HTTP 429)."""
+
+    _attr_translation_key = "rate_limit_until"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:timer-sand"
+
+    def __init__(self, coordinator: SkodaDataUpdateCoordinator, vin: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vin)
+        self._attr_unique_id = f"{vin}_rate_limit_until"
+
+    @property
+    def available(self) -> bool:
+        """Stay available while polling fails, which is when this sensor matters."""
+        return True
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return when the quota is back, or None unless the last poll was rate limited."""
+        result = self.coordinator.poll_results.get(self.vin)
+        return result.retry_at if result and result.status == STATUS_RATE_LIMITED else None

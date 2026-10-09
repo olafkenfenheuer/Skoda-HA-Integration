@@ -13,6 +13,8 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
   `RateLimit-Reset` of "Retry after N seconds" in de foutmelding, maximaal een uur). De API stuurt geen
   `Retry-After`-header, waardoor eerder het vaste minimum van 15 minuten gold en de integratie de limiet
   bleef raken terwijl het quotum nog op was.
+- Diagnostische sensor "Rate limit tot" per voertuig: een tijdstempel die toont wanneer het quotum na een
+  rate limit weer beschikbaar is; anders leeg. Het attribuut `retry_at` van de API-statussensor blijft.
 
 ### Toegevoegd
 

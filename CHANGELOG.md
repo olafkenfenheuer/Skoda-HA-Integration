@@ -18,6 +18,9 @@ All notable changes to this integration are documented here. The format follows
 
 - The "API status" sensor has a new attribute `retry_at`: after a rate limit it shows when the request
   quota is available again.
+- Diagnostic sensor "Rate limit until" per vehicle: a timestamp showing when the request quota is
+  available again after a rate limit; empty otherwise. The `retry_at` attribute of the API status sensor
+  stays.
 
 ## [0.3.10]
 

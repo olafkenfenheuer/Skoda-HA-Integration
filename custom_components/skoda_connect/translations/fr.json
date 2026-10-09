@@ -103,6 +103,9 @@
       },
       "last_poll": {
         "name": "Dernière interrogation"
+      },
+      "rate_limit_until": {
+        "name": "Limite de requêtes jusqu'à"
       }
     },
     "binary_sensor": {
