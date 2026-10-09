@@ -14,6 +14,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -38,6 +39,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+STORAGE_VERSION = 1
+STORAGE_SAVE_DELAY = 60
 MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
 MAX_RATE_LIMIT_BACKOFF = timedelta(hours=1)
 # A vehicle counts as due slightly early so scheduler jitter never skips a whole tick.
@@ -135,6 +138,21 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         self.poll_results: dict[str, PollResult] = {}
         self.last_success: dict[str, datetime] = {}
         self.update_interval = self._shortest_interval()
+        # Last known vehicle data, so the entities can be set up while the API is rate limited.
+        self._store: Store[dict[str, dict]] = Store(
+            hass, STORAGE_VERSION, f"{DOMAIN}.{config_entry.entry_id}"
+        )
+
+    async def _async_load_cached(self) -> SkodaData | None:
+        """Return the last stored data if it covers every configured vehicle."""
+        stored = await self._store.async_load()
+        if not isinstance(stored, dict) or not all(
+            isinstance(stored.get(vin), dict) and stored[vin] for vin in self.vins
+        ):
+            return None
+        return SkodaData(
+            vehicles={vin: SkodaVehicle(vin=vin, data=stored[vin]) for vin in self.vins}
+        )
 
     # -- per-vehicle polling intervals -------------------------------------------------
 
@@ -247,6 +265,11 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
                 _LOGGER.warning(
                     "Škoda Connect API rate limit hit; pausing polling for %s", backoff
                 )
+                if not self.data and (cached := await self._async_load_cached()):
+                    # Startup during a rate limit: set up with the last known state instead of
+                    # failing the setup, and poll again once the quota is back.
+                    self.update_interval = backoff
+                    return cached
                 raise UpdateFailed(
                     "Škoda Connect API rate limit reached; backing off",
                     retry_after=backoff.total_seconds(),
@@ -267,6 +290,10 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         for failure in failures:
             _LOGGER.warning("Could not update a vehicle: %s", failure)
         data = SkodaData(vehicles=vehicles)
+        self._store.async_delay_save(
+            lambda: {vin: vehicle.data for vin, vehicle in data.vehicles.items()},
+            STORAGE_SAVE_DELAY,
+        )
         # A vehicle that started or stopped charging switches to its other interval.
         self.data = data
         self.update_interval = self._shortest_interval()

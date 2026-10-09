@@ -13,6 +13,9 @@ All notable changes to this integration are documented here. The format follows
   `RateLimit-Reset` header or "Retry after N seconds" in the error message, up to one hour). The API
   sends no `Retry-After` header, so previously the fixed 15 minute minimum was used and the integration
   kept hitting the limit while the quota was still exhausted.
+- Starting Home Assistant while the API is rate limited no longer leaves the entities unavailable: the
+  last known vehicle state is stored and used until the quota is back (the API status sensor shows
+  `rate_limited`). Polling resumes after the wait time reported by the API.
 
 ### Added
 

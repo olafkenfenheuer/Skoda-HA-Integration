@@ -15,6 +15,9 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
   bleef raken terwijl het quotum nog op was.
 - Diagnostische sensor "Rate limit tot" per voertuig: een tijdstempel die toont wanneer het quotum na een
   rate limit weer beschikbaar is; anders leeg. Het attribuut `retry_at` van de API-statussensor blijft.
+- Starten van Home Assistant tijdens een rate limit laat de entiteiten niet meer niet-beschikbaar: de
+  laatst bekende voertuigstatus wordt opgeslagen en gebruikt totdat het quotum weer beschikbaar is (de
+  API-statussensor toont `rate_limited`). Het pollen hervat na de door de API gemelde wachttijd.
 
 ### Toegevoegd
 
