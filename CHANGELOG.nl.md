@@ -5,6 +5,39 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.11]
+
+### Opgelost
+
+- Een rate limit (HTTP 429) wordt niet meer als fout gelogd: de integratie behoudt de laatst bekende
+  status, pauzeert het pollen van dat voertuig voor de door de API gemelde tijd plus 30 seconden (in
+  plaats van minimaal 15 minuten) en pollt direct weer zodra het quotum terug is.
+- Na een rate limit (HTTP 429) pauzeert de integratie nu zo lang als de API aangeeft (de header
+  `RateLimit-Reset` of "Retry after N seconds" in de foutmelding, maximaal een uur). De API stuurt geen
+  `Retry-After`-header, waardoor eerder het vaste minimum van 15 minuten gold en de integratie de limiet
+  bleef raken terwijl het quotum nog op was.
+- Diagnostische sensor "Rate limit tot" per voertuig: een tijdstempel die toont wanneer het quotum na een
+  rate limit weer beschikbaar is; anders leeg. Het attribuut `retry_at` van de API-statussensor blijft.
+- Starten van Home Assistant tijdens een rate limit laat de entiteiten niet meer niet-beschikbaar: de
+  laatst bekende voertuigstatus wordt opgeslagen en gebruikt totdat het quotum weer beschikbaar is (de
+  API-statussensor toont `rate_limited`). Het pollen hervat na de door de API gemelde wachttijd.
+
+### Gewijzigd
+
+- De schakelaar per voertuig "Laadinterval bij aangesloten kabel" heet nu "Snel pollen als kabel is
+  aangesloten" en heeft een eigen pictogram (`mdi:power-plug-battery`); het gedrag is ongewijzigd.
+
+### Toegevoegd
+
+- Diagnostische sensor "Resterende API-verzoeken" per voertuig: de resterende verzoeken van het
+  uurquotum volgens het laatste API-antwoord (attributen `limit`, `reset_at`, `updated`).
+- Knop "API nu opvragen" per voertuig: vraagt de MyŠkoda-API direct op voor het voertuig. Kost één verzoek van het
+  API-quotum en wordt met een melding geweigerd tijdens een rate limit.
+- Pictogrammen voor de kilometerstand, laadsnelheid, kofferbak, motorkap en de twee pollinginterval-entiteiten
+  (nieuw `icons.json`).
+- De sensor "API-status" heeft een nieuw attribuut `retry_at`: na een rate limit toont het wanneer het
+  quotum weer beschikbaar is.
+
 ## [0.3.10]
 
 ### Opgelost

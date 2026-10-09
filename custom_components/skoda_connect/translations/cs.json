@@ -103,6 +103,12 @@
       },
       "last_poll": {
         "name": "Poslední dotaz"
+      },
+      "rate_limit_until": {
+        "name": "Limit požadavků do"
+      },
+      "api_requests_remaining": {
+        "name": "Zbývající požadavky API"
       }
     },
     "binary_sensor": {
@@ -134,6 +140,11 @@
         "name": "Centrální zamykání"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Dotázat se API nyní"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Poloha"
@@ -149,7 +160,7 @@
         "name": "Nabíjení"
       },
       "poll_when_plugged_in": {
-        "name": "Interval nabíjení při zapojeném kabelu"
+        "name": "Rychlé dotazování při zapojeném kabelu"
       }
     },
     "number": {

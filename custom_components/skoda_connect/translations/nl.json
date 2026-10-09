@@ -103,6 +103,12 @@
       },
       "last_poll": {
         "name": "Laatste poll"
+      },
+      "rate_limit_until": {
+        "name": "Rate limit tot"
+      },
+      "api_requests_remaining": {
+        "name": "Resterende API-verzoeken"
       }
     },
     "binary_sensor": {
@@ -134,6 +140,11 @@
         "name": "Centrale vergrendeling"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "API nu opvragen"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Locatie"
@@ -149,7 +160,7 @@
         "name": "Laden"
       },
       "poll_when_plugged_in": {
-        "name": "Laadinterval bij aangesloten kabel"
+        "name": "Snel pollen als kabel is aangesloten"
       }
     },
     "number": {

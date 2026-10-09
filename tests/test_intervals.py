@@ -153,13 +153,24 @@ async def test_rate_limit_backs_off(hass: HomeAssistant) -> None:
     mock, p = await _setup(hass, entry, {VIN: False})
     try:
         c = entry.runtime_data
-        mock.side_effect = SkodaRateLimitError("x", status=429, retry_after=timedelta(seconds=1))
+        mock.side_effect = SkodaRateLimitError(
+            "x", status=429, retry_after=timedelta(minutes=11)
+        )
         with patch("custom_components.skoda_connect.coordinator.time.monotonic", return_value=time.monotonic() + 601):
             await c.async_refresh()
-        assert not c.last_update_success
-        # Retry-After below the 15 minute floor is raised to it.
-        assert c._rate_limit_backoff(SkodaRateLimitError("x", retry_after=timedelta(seconds=1))) == timedelta(minutes=15)
+        # A rate limit is not an error: the entities keep their last state.
+        assert c.last_update_success
+        assert c.data.vehicles[VIN] is not None
+        # The next poll waits for the quota (the API's wait time plus a margin).
+        assert c.update_interval > timedelta(minutes=10)
+        calls = mock.await_count
+        await c.async_refresh()
+        assert mock.await_count == calls
+        # The wait time reported by the API is used, with a margin and a floor / ceiling.
+        assert c._rate_limit_backoff(SkodaRateLimitError("x", retry_after=timedelta(minutes=11))) == timedelta(minutes=11, seconds=30)
+        assert c._rate_limit_backoff(SkodaRateLimitError("x", retry_after=timedelta(seconds=1))) == timedelta(minutes=1)
         assert c._rate_limit_backoff(SkodaRateLimitError("x", retry_after=timedelta(hours=5))) == timedelta(hours=1)
+        assert c._rate_limit_backoff(SkodaRateLimitError("x")) == timedelta(minutes=15)
     finally:
         p.stop()
 

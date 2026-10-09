@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -45,6 +47,25 @@ class SkodaConnectionError(SkodaApiError):
     """The API could not be reached."""
 
 
+_RETRY_AFTER_DETAIL_RE = re.compile(r"retry after (\d+) seconds", re.IGNORECASE)
+
+
+def _rate_limit_wait(headers: Mapping[str, str], detail: str) -> timedelta | None:
+    """Return how long to wait after a 429.
+
+    The API sends no Retry-After header; it reports the wait in the RateLimit-Reset
+    header (seconds) and in the problem detail ("Retry after N seconds").
+    """
+    if (wait := _parse_retry_after(headers.get("Retry-After"))) is not None:
+        return wait
+    reset = (headers.get("RateLimit-Reset") or "").strip()
+    if reset.isdigit():
+        return timedelta(seconds=int(reset))
+    if match := _RETRY_AFTER_DETAIL_RE.search(detail):
+        return timedelta(seconds=int(match.group(1)))
+    return None
+
+
 def _parse_retry_after(value: str | None) -> timedelta | None:
     """Parse a Retry-After header (seconds or HTTP-date) into a timedelta."""
     if not value:
@@ -61,6 +82,39 @@ def _parse_retry_after(value: str | None) -> timedelta | None:
         return retry_at - datetime.now(UTC)
     except (TypeError, ValueError):
         return None
+
+
+_VEHICLE_PATH_RE = re.compile(r"/vehicles/([^/]+)")
+
+
+@dataclass
+class RateLimitInfo:
+    """The request quota of one vehicle as reported by the RateLimit-* response headers."""
+
+    limit: int | None
+    remaining: int | None
+    reset_at: datetime | None
+    updated: datetime
+
+
+def _rate_limit_info(headers: Mapping[str, str]) -> RateLimitInfo | None:
+    """Parse the RateLimit-Limit/-Remaining/-Reset headers, or None if none is present."""
+
+    def number(name: str) -> int | None:
+        value = (headers.get(name) or "").strip()
+        return int(value) if value.isdigit() else None
+
+    limit, remaining, reset = (
+        number("RateLimit-Limit"),
+        number("RateLimit-Remaining"),
+        number("RateLimit-Reset"),
+    )
+    if limit is None and remaining is None and reset is None:
+        return None
+    now = datetime.now(UTC)
+    return RateLimitInfo(
+        limit, remaining, now + timedelta(seconds=reset) if reset is not None else None, now
+    )
 
 
 @dataclass
@@ -110,6 +164,8 @@ class SkodaApi:
         """Initialize the client."""
         self._session = session
         self._api_key = api_key
+        # Latest request quota per VIN, updated from the headers of every response.
+        self.rate_limits: dict[str, RateLimitInfo] = {}
 
     async def _request(
         self,
@@ -129,6 +185,7 @@ class SkodaApi:
                 timeout=REQUEST_TIMEOUT,
                 headers={"X-API-Key": self._api_key, "Accept": "application/json"},
             ) as response:
+                self._record_rate_limit(path, response.headers)
                 if response.status < 400:
                     _LOGGER.debug(
                         "%s %s -> %s (rate limit remaining: %s)",
@@ -148,6 +205,11 @@ class SkodaApi:
                 raise await self._error_for(response)
         except (ClientError, TimeoutError) as err:
             raise SkodaConnectionError(f"Cannot reach the MyŠkoda API: {err}") from err
+
+    def _record_rate_limit(self, path: str, headers: Mapping[str, str]) -> None:
+        match = _VEHICLE_PATH_RE.search(path)
+        if match and (info := _rate_limit_info(headers)):
+            self.rate_limits[match.group(1)] = info
 
     @staticmethod
     async def _error_for(response: ClientResponse) -> SkodaApiError:
@@ -170,7 +232,7 @@ class SkodaApi:
         if response.status == 429 and problem_id != "vehicle-not-accepting-requests":
             return SkodaRateLimitError(
                 detail,
-                retry_after=_parse_retry_after(response.headers.get("Retry-After")),
+                retry_after=_rate_limit_wait(response.headers, str(detail)),
                 **kwargs,
             )
         return SkodaApiError(detail, **kwargs)

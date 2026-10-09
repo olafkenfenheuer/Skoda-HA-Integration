@@ -20,6 +20,7 @@ externe client-bibliotheek.
 | `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
 | `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
 | `switch` | Laden starten/stoppen |
+| `button` | API nu opvragen (vraagt de MyŠkoda-API direct op voor het voertuig; kost één verzoek van het API-quotum en wordt geweigerd tijdens een rate limit) |
 | `number` | Laadlimiet (doel-laadniveau), pollinginterval per voertuig (normaal / tijdens laden) |
 | `select` | Laadmodus |
 
@@ -107,7 +108,7 @@ is aangesloten) wordt het laadinterval gebruikt; na het starten van het laden ka
 normaal interval duren voordat het sneller pollen begint (laden starten via Home Assistant ververst
 na 30 seconden meteen).
 
-De schakelaar **Laadinterval bij aangesloten kabel** (categorie configuratie) doet hetzelfde per voertuig
+De schakelaar **Snel pollen als kabel is aangesloten** (categorie configuratie) doet hetzelfde per voertuig
 en overschrijft voor dat voertuig de algemene optie.
 
 ### Rate limits
@@ -117,8 +118,8 @@ De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). E
 
 - is het standaardinterval 10 minuten (minimaal 3; 3 minuten gebruiken al de hele limiet van 20 verzoeken per uur, zonder ruimte voor commando's) en 5 minuten tijdens het laden (of bij aangesloten kabel, als je die optie aanzet);
 - wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
-- worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd (`Retry-After`, minimaal
-  15 minuten, maximaal 1 uur);
+- worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd voor de door de API gemelde wachttijd (`Retry-After`,
+  `RateLimit-Reset` of foutmelding; plus 30 seconden; maximaal 1 uur, 15 minuten als de API geen wachttijd geeft);
 - blijft de laatst bekende status van een voertuig behouden als alleen zijn verzoek mislukt.
 
 ## Ontwikkeling

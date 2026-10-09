@@ -103,6 +103,12 @@
       },
       "last_poll": {
         "name": "Dernière interrogation"
+      },
+      "rate_limit_until": {
+        "name": "Limite de requêtes jusqu'à"
+      },
+      "api_requests_remaining": {
+        "name": "Requêtes API restantes"
       }
     },
     "binary_sensor": {
@@ -134,6 +140,11 @@
         "name": "Verrouillage centralisé"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Interroger l'API maintenant"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Localisation"
@@ -149,7 +160,7 @@
         "name": "Charge"
       },
       "poll_when_plugged_in": {
-        "name": "Intervalle de charge câble branché"
+        "name": "Interrogation rapide quand branché"
       }
     },
     "number": {

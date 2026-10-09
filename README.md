@@ -18,11 +18,12 @@ an options flow, reauthentication support, and a diagnostics download.
 
 | Platform | Entities |
 |---|---|
-| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, target temperature, address of the parking position, name of the charging location profile currently active, API status (result of the last poll, diagnostic), last poll (date and time of the last successful poll, diagnostic) |
+| `sensor` | Battery level, charging power, charging rate, remaining charging time, battery/total range, fuel level, AdBlue range, mileage, target temperature, address of the parking position, name of the charging location profile currently active, API status (result of the last poll, diagnostic), last poll (date and time of the last successful poll, diagnostic), rate limit until (when the request quota is available again after a rate limit, diagnostic), API requests remaining (left of the hourly quota according to the last response, with the attributes `limit` and `reset_at`, diagnostic) |
 | `binary_sensor` | Doors, windows, trunk, bonnet, lights, central locking, charging, charging cable plugged in, vehicle at saved charging location |
 | `device_tracker` | Parking position (shows on the Map dashboard; unknown while driving) |
 | `climate` | Remote air conditioning (on/off, active ventilation, target temperature) |
 | `switch` | Start/stop charging |
+| `button` | Poll API now (queries the MyŠkoda API for the vehicle immediately; costs one request of the API quota and is refused while the API is rate limited) |
 | `number` | Charge limit (target state of charge), per-vehicle polling intervals (normal / while charging) |
 | `select` | Charge mode |
 
@@ -124,7 +125,7 @@ plugged in. After a charge starts it can take up to one normal interval until th
 in; starting charging from Home Assistant refreshes the vehicle after 30 seconds, so it switches over
 right away.
 
-The switch **Charging interval while plugged in** (configuration category) does the same per vehicle:
+The switch **Fast polling while plugged in** (configuration category) does the same per vehicle:
 it overrides the global option for that vehicle.
 
 ### Rate limits
@@ -139,8 +140,8 @@ integration:
   for commands).
 - Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so
   it schedules a single refresh 30 seconds after the last command.
-- Detects HTTP 429 responses and pauses polling, honoring `Retry-After` (at least 15 minutes,
-  at most 1 hour), and logs a warning when this happens.
+- Detects HTTP 429 responses and pauses polling, for the wait time reported by the API (`Retry-After`, `RateLimit-Reset` or the error
+  message, plus 30 seconds; at most 1 hour, 15 minutes if the API gives no wait time), and logs a warning when this happens.
 - Keeps the last known state of a vehicle if only its request failed.
 
 Parts of the vehicle the API cannot report (for example because the vehicle is asleep) are

@@ -5,6 +5,40 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.11]
+
+### Fixed
+
+- A rate limit (HTTP 429) is no longer logged as an error: the integration keeps the last known state,
+  pauses polling of that vehicle for the time the API reports plus 30 seconds (instead of at least
+  15 minutes) and polls again right after the quota is back.
+- After a rate limit (HTTP 429) the integration now pauses for the time the API reports (the
+  `RateLimit-Reset` header or "Retry after N seconds" in the error message, up to one hour). The API
+  sends no `Retry-After` header, so previously the fixed 15 minute minimum was used and the integration
+  kept hitting the limit while the quota was still exhausted.
+- Starting Home Assistant while the API is rate limited no longer leaves the entities unavailable: the
+  last known vehicle state is stored and used until the quota is back (the API status sensor shows
+  `rate_limited`). Polling resumes after the wait time reported by the API.
+
+### Changed
+
+- The per-vehicle switch "Charging interval while plugged in" is now called "Fast polling while plugged in"
+  and has its own icon (`mdi:power-plug-battery`); its behavior is unchanged.
+
+### Added
+
+- Diagnostic sensor "API requests remaining" per vehicle: the requests left of the hourly quota according
+  to the last API response (attributes `limit`, `reset_at`, `updated`).
+- Button "Poll API now" per vehicle: queries the MyŠkoda API for the vehicle immediately. It costs one request of the API
+  quota and is refused with a message while the API is rate limited.
+- Icons for the mileage, charging rate, trunk, bonnet and the two polling interval entities (new
+  `icons.json`).
+- The "API status" sensor has a new attribute `retry_at`: after a rate limit it shows when the request
+  quota is available again.
+- Diagnostic sensor "Rate limit until" per vehicle: a timestamp showing when the request quota is
+  available again after a rate limit; empty otherwise. The `retry_at` attribute of the API status sensor
+  stays.
+
 ## [0.3.10]
 
 ### Fixed

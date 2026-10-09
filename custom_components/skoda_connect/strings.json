@@ -103,6 +103,12 @@
       },
       "last_poll": {
         "name": "Last poll"
+      },
+      "rate_limit_until": {
+        "name": "Rate limit until"
+      },
+      "api_requests_remaining": {
+        "name": "API requests remaining"
       }
     },
     "binary_sensor": {
@@ -134,6 +140,11 @@
         "name": "Central locking"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Poll API now"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Location"
@@ -149,7 +160,7 @@
         "name": "Charging"
       },
       "poll_when_plugged_in": {
-        "name": "Charging interval while plugged in"
+        "name": "Fast polling while plugged in"
       }
     },
     "number": {
