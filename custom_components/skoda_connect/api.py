@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -43,6 +45,25 @@ class SkodaRateLimitError(SkodaApiError):
 
 class SkodaConnectionError(SkodaApiError):
     """The API could not be reached."""
+
+
+_RETRY_AFTER_DETAIL_RE = re.compile(r"retry after (\d+) seconds", re.IGNORECASE)
+
+
+def _rate_limit_wait(headers: Mapping[str, str], detail: str) -> timedelta | None:
+    """Return how long to wait after a 429.
+
+    The API sends no Retry-After header; it reports the wait in the RateLimit-Reset
+    header (seconds) and in the problem detail ("Retry after N seconds").
+    """
+    if (wait := _parse_retry_after(headers.get("Retry-After"))) is not None:
+        return wait
+    reset = (headers.get("RateLimit-Reset") or "").strip()
+    if reset.isdigit():
+        return timedelta(seconds=int(reset))
+    if match := _RETRY_AFTER_DETAIL_RE.search(detail):
+        return timedelta(seconds=int(match.group(1)))
+    return None
 
 
 def _parse_retry_after(value: str | None) -> timedelta | None:
@@ -170,7 +191,7 @@ class SkodaApi:
         if response.status == 429 and problem_id != "vehicle-not-accepting-requests":
             return SkodaRateLimitError(
                 detail,
-                retry_after=_parse_retry_after(response.headers.get("Retry-After")),
+                retry_after=_rate_limit_wait(response.headers, str(detail)),
                 **kwargs,
             )
         return SkodaApiError(detail, **kwargs)

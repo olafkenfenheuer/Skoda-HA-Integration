@@ -5,6 +5,15 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.11]
+
+### Opgelost
+
+- Na een rate limit (HTTP 429) pauzeert de integratie nu zo lang als de API aangeeft (de header
+  `RateLimit-Reset` of "Retry after N seconds" in de foutmelding, maximaal een uur). De API stuurt geen
+  `Retry-After`-header, waardoor eerder het vaste minimum van 15 minuten gold en de integratie de limiet
+  bleef raken terwijl het quotum nog op was.
+
 ## [0.3.10]
 
 ### Opgelost

@@ -5,6 +5,15 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.11]
+
+### Fixed
+
+- After a rate limit (HTTP 429) the integration now pauses for the time the API reports (the
+  `RateLimit-Reset` header or "Retry after N seconds" in the error message, up to one hour). The API
+  sends no `Retry-After` header, so previously the fixed 15 minute minimum was used and the integration
+  kept hitting the limit while the quota was still exhausted.
+
 ## [0.3.10]
 
 ### Fixed
