@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.7]
+
+### Gewijzigd
+
+- Integratietype gewijzigd van `hub` naar `device`. Home Assistant toont de knop op de integratiepagina
+  nu als "Apparaat toevoegen" in plaats van "Hub toevoegen" en groepeert de items onder "Apparaten". De
+  tekst wordt door Home Assistant uit het integratietype afgeleid en kan niet vrij worden ingesteld.
+
 ## [0.3.6]
 
 ### Toegevoegd
