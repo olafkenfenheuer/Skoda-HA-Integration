@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -196,6 +197,7 @@ async def async_setup_entry(
             if description.exists_fn(vehicle):
                 entities.append(SkodaSensor(coordinator, vin, description))
         entities.append(SkodaApiStatusSensor(coordinator, vin))
+        entities.append(SkodaLastPollSensor(coordinator, vin))
     async_add_entities(entities)
 
 
@@ -271,3 +273,33 @@ class SkodaApiStatusSensor(SkodaVehicleEntity, SensorEntity):
         if result.omitted:
             attributes["omitted_parts"] = result.omitted
         return attributes
+
+
+class SkodaLastPollSensor(SkodaVehicleEntity, SensorEntity):
+    """Shows when the vehicle was last polled successfully (a date and time)."""
+
+    _attr_translation_key = "last_poll"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(self, coordinator: SkodaDataUpdateCoordinator, vin: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vin)
+        self._attr_unique_id = f"{vin}_last_poll"
+
+    @property
+    def available(self) -> bool:
+        """Stay available while polling fails, so the age of the data stays visible."""
+        return True
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the time of the last successful poll."""
+        return self.coordinator.last_success.get(self.vin)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the time of the last attempt, which differs after a failed poll."""
+        result = self.coordinator.poll_results.get(self.vin)
+        return {"last_attempt": result.time} if result else {}

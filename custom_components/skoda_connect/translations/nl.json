@@ -100,6 +100,9 @@
           "connection_error": "Verbindingsfout",
           "api_error": "API-fout"
         }
+      },
+      "last_poll": {
+        "name": "Laatste poll"
       }
     },
     "binary_sensor": {

@@ -19,7 +19,7 @@ Options-Flow, Reauthentifizierung und Diagnose-Download.
 
 | Plattform | Entitäten |
 |---|---|
-| `sensor` | Batteriestand, Ladeleistung, Laderate, verbleibende Ladezeit, Batterie-/Gesamtreichweite, Kraftstoffstand, AdBlue-Reichweite, Kilometerstand, Zieltemperatur, Adresse der Parkposition, Name des aktuell aktiven Ladestandort-Profils, API-Status (Ergebnis der letzten Abfrage, Diagnose) |
+| `sensor` | Batteriestand, Ladeleistung, Laderate, verbleibende Ladezeit, Batterie-/Gesamtreichweite, Kraftstoffstand, AdBlue-Reichweite, Kilometerstand, Zieltemperatur, Adresse der Parkposition, Name des aktuell aktiven Ladestandort-Profils, API-Status (Ergebnis der letzten Abfrage, Diagnose), Letzter Abruf (Datum und Uhrzeit des letzten erfolgreichen Abrufs, Diagnose) |
 | `binary_sensor` | Türen, Fenster, Kofferraum, Motorhaube, Beleuchtung, Zentralverriegelung, Laden, Ladekabel angesteckt, Fahrzeug an gespeichertem Ladestandort |
 | `device_tracker` | Parkposition (erscheint auf dem Karten-Dashboard; während der Fahrt unbekannt) |
 | `climate` | Standklimatisierung (an/aus, aktive Belüftung, Zieltemperatur) |

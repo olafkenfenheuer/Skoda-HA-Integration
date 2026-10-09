@@ -100,6 +100,9 @@
           "connection_error": "Erreur de connexion",
           "api_error": "Erreur de l'API"
         }
+      },
+      "last_poll": {
+        "name": "Dernière interrogation"
       }
     },
     "binary_sensor": {

@@ -199,7 +199,9 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
     def _is_due(self, vin: str) -> bool:
         if vin in self._force or not self.data or vin not in self.data.vehicles:
             return True
-        elapsed = time.monotonic() - self._last_fetch.get(vin, 0)
+        if vin not in self._last_fetch:
+            return True
+        elapsed = time.monotonic() - self._last_fetch[vin]
         return elapsed >= self._interval_for(vin).total_seconds() - DUE_TOLERANCE_SECONDS
 
     def reschedule(self) -> None:
@@ -221,6 +223,10 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
             self.poll_results[vin] = poll = _poll_result(result)
             if not isinstance(result, Exception):
                 self.last_success[vin] = poll.time
+        if any(isinstance(result, Exception) for result in fetched.values()):
+            # Home Assistant does not notify listeners about a failed update that follows a
+            # failed one, so push the new poll results (status, last attempt) to the sensors.
+            self.async_update_listeners()
 
         vehicles: dict[str, SkodaVehicle] = {}
         failures: list[Exception] = []

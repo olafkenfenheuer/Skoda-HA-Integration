@@ -5,6 +5,14 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.8]
+
+### Added
+
+- Diagnostic sensor "Last poll" per vehicle: a timestamp sensor with the date and time of the last
+  successful poll. It stays available while polling fails; the attribute `last_attempt` holds the time
+  of the latest attempt.
+
 ## [0.3.7]
 
 ### Changed

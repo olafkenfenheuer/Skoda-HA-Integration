@@ -54,6 +54,7 @@ async def test_status_after_failure_stays_available(
 
     err = SkodaApiError("boom", status=500, problem="internal-error")
     mock_get_vehicle.side_effect = err
+    coordinator._last_fetch.clear()  # the vehicle is only polled once its interval elapsed
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get(_status_id(hass))
@@ -72,3 +73,26 @@ async def test_status_after_failure_stays_available(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get(_status_id(hass)).state == "auth_error"
+
+
+async def test_last_poll_sensor(hass: HomeAssistant, mock_entry: MockConfigEntry, mock_get_vehicle):
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = mock_entry.runtime_data
+    entity_id = er.async_get(hass).async_get_entity_id("sensor", "skoda_connect", f"{VIN}_last_poll")
+    state = hass.states.get(entity_id)
+    # Home Assistant drops the microseconds of timestamp states.
+    assert state.state == coordinator.last_success[VIN].replace(microsecond=0).isoformat()
+    assert state.attributes["device_class"] == "timestamp"
+    first = state.state
+
+    # A failed poll keeps the time of the last success and reports the attempt separately.
+    mock_get_vehicle.side_effect = SkodaApiError("boom", status=500)
+    coordinator._last_fetch.clear()  # the vehicle is only polled once its interval elapsed
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == first
+    assert state.attributes["last_attempt"] == coordinator.poll_results[VIN].time
+    assert coordinator.poll_results[VIN].status == "api_error"

@@ -100,6 +100,9 @@
           "connection_error": "Chyba pripojenia",
           "api_error": "Chyba API"
         }
+      },
+      "last_poll": {
+        "name": "Posledný dopyt"
       }
     },
     "binary_sensor": {

@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.8]
+
+### Toegevoegd
+
+- Diagnostische sensor "Laatste poll" per voertuig: een tijdstempel-sensor met datum en tijd van de laatste
+  geslaagde poll. Blijft beschikbaar als het pollen mislukt; het attribuut `last_attempt` bevat het
+  tijdstip van de laatste poging.
+
 ## [0.3.7]
 
 ### Gewijzigd

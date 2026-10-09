@@ -100,6 +100,9 @@
           "connection_error": "Verbindungsfehler",
           "api_error": "API-Fehler"
         }
+      },
+      "last_poll": {
+        "name": "Letzter Abruf"
       }
     },
     "binary_sensor": {
