@@ -16,7 +16,7 @@ Default branch: `main`. Unofficial project - not affiliated with Škoda Auto.
   - `config_flow.py` - API key + VIN list (comma separated), reauth (also used to migrate 0.2.x entries
     that still hold email/password) and reconfigure (new API key / VINs at any time; both share
     `_async_credentials_step`), options flow (intervals, read-only)
-  - `entity.py` - `SkodaVehicleEntity` base; platforms: `sensor`, `binary_sensor`, `device_tracker`,
+  - `entity.py` - `SkodaVehicleEntity` base; platforms: `sensor`, `binary_sensor`, `button`, `device_tracker`,
     `climate`, `switch`, `number`, `select`; `diagnostics.py`
   - `strings.json` is a copy of `translations/en.json`; translations exist for en/de/nl/fr/cs/sk
   - `brand/icon.png` - icon shown by Home Assistant 2026.3+

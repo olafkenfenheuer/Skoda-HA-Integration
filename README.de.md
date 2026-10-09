@@ -19,11 +19,12 @@ Options-Flow, Reauthentifizierung und Diagnose-Download.
 
 | Plattform | Entitäten |
 |---|---|
-| `sensor` | Batteriestand, Ladeleistung, Laderate, verbleibende Ladezeit, Batterie-/Gesamtreichweite, Kraftstoffstand, AdBlue-Reichweite, Kilometerstand, Zieltemperatur, Adresse der Parkposition, Name des aktuell aktiven Ladestandort-Profils, API-Status (Ergebnis der letzten Abfrage, Diagnose), Letzter Abruf (Datum und Uhrzeit des letzten erfolgreichen Abrufs, Diagnose) |
+| `sensor` | Batteriestand, Ladeleistung, Laderate, verbleibende Ladezeit, Batterie-/Gesamtreichweite, Kraftstoffstand, AdBlue-Reichweite, Kilometerstand, Zieltemperatur, Adresse der Parkposition, Name des aktuell aktiven Ladestandort-Profils, API-Status (Ergebnis der letzten Abfrage, Diagnose), Letzter Abruf (Datum und Uhrzeit des letzten erfolgreichen Abrufs, Diagnose), Rate-Limit bis (wann das Anfragekontingent nach einem Rate-Limit wieder verfügbar ist, Diagnose) |
 | `binary_sensor` | Türen, Fenster, Kofferraum, Motorhaube, Beleuchtung, Zentralverriegelung, Laden, Ladekabel angesteckt, Fahrzeug an gespeichertem Ladestandort |
 | `device_tracker` | Parkposition (erscheint auf dem Karten-Dashboard; während der Fahrt unbekannt) |
 | `climate` | Standklimatisierung (an/aus, aktive Belüftung, Zieltemperatur) |
 | `switch` | Laden starten/stoppen |
+| `button` | Jetzt aktualisieren (fragt das Fahrzeug sofort ab; kostet eine Anfrage des API-Kontingents und wird bei aktivem Rate-Limit abgelehnt) |
 | `number` | Ladelimit (Ziel-Ladezustand), Abfrageintervalle pro Fahrzeug (normal / beim Laden) |
 | `select` | Lademodus |
 
@@ -139,8 +140,8 @@ Ein Poll kostet eine Anfrage pro Fahrzeug, jeder Fernbefehl eine weitere. Deshal
   Fahrzeug lädt bzw. – mit aktivierter Option – eingesteckt ist (12 Anfragen/Stunde – lass Platz für Befehle).
 - Nach Befehlen wird nicht jedes Mal aktualisiert; Befehle werden asynchron angenommen (HTTP 202),
   daher wird 30 Sekunden nach dem letzten Befehl einmal aktualisiert.
-- HTTP-429-Antworten werden erkannt und das Polling pausiert, unter Beachtung von `Retry-After`
-  (mindestens 15 Minuten, höchstens 1 Stunde); dabei wird eine Warnung protokolliert.
+- HTTP-429-Antworten werden erkannt und das Polling pausiert, für die von der API genannte Wartezeit
+  (`Retry-After`, `RateLimit-Reset` oder Fehlermeldung; mindestens 15 Minuten, höchstens 1 Stunde); dabei wird eine Warnung protokolliert.
 - Der zuletzt bekannte Zustand eines Fahrzeugs bleibt erhalten, wenn nur seine Anfrage fehlschlägt.
 
 Teile des Fahrzeugs, die die API nicht melden kann (zum Beispiel weil das Fahrzeug schläft), fehlen

@@ -137,6 +137,11 @@
         "name": "Central locking"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Refresh now"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Location"

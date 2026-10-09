@@ -21,6 +21,8 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Toegevoegd
 
+- Knop "Nu verversen" per voertuig: vraagt het voertuig direct op. Kost één verzoek van het
+  API-quotum en wordt met een melding geweigerd tijdens een rate limit.
 - Pictogrammen voor de kilometerstand, laadsnelheid, kofferbak, motorkap en de twee pollinginterval-entiteiten
   (nieuw `icons.json`).
 - De sensor "API-status" heeft een nieuw attribuut `retry_at`: na een rate limit toont het wanneer het

@@ -137,6 +137,11 @@
         "name": "Centrální zamykání"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Aktualizovat nyní"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Poloha"

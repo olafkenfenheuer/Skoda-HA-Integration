@@ -137,6 +137,11 @@
         "name": "Verrouillage centralisé"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Actualiser maintenant"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Localisation"

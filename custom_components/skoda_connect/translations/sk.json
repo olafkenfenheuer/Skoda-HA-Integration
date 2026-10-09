@@ -137,6 +137,11 @@
         "name": "Centrálne zamykanie"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Aktualizovať teraz"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Poloha"

@@ -137,6 +137,11 @@
         "name": "Zentralverriegelung"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Jetzt aktualisieren"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Standort"

@@ -23,6 +23,11 @@
       "poll_interval_charging": {
         "default": "mdi:clock-fast"
       }
+    },
+    "button": {
+      "refresh": {
+        "default": "mdi:refresh"
+      }
     }
   }
 }

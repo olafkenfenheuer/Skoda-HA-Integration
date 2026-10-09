@@ -332,6 +332,25 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
             self.hass, POST_COMMAND_REFRESH_DELAY, self._async_delayed_refresh
         )
 
+    async def async_refresh_vehicle(self, vin: str) -> None:
+        """Poll one vehicle now, regardless of its polling interval.
+
+        Costs one request of the quota, so it is refused while the API is rate limited.
+        """
+        result = self.poll_results.get(vin)
+        if (
+            result is not None
+            and result.status == STATUS_RATE_LIMITED
+            and result.retry_at is not None
+            and result.retry_at > dt_util.utcnow()
+        ):
+            raise HomeAssistantError(
+                "The Škoda Connect API is rate limited until "
+                f"{dt_util.as_local(result.retry_at):%H:%M}"
+            )
+        self._force.add(vin)
+        await self.async_request_refresh()
+
     async def _async_delayed_refresh(self, _now) -> None:
         self._cancel_refresh = None
         await self.async_request_refresh()

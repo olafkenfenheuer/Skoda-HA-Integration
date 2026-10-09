@@ -137,6 +137,11 @@
         "name": "Centrale vergrendeling"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Nu verversen"
+      }
+    },
     "device_tracker": {
       "vehicle_location": {
         "name": "Locatie"

@@ -19,6 +19,8 @@ All notable changes to this integration are documented here. The format follows
 
 ### Added
 
+- Button "Refresh now" per vehicle: polls the vehicle immediately. It costs one request of the API
+  quota and is refused with a message while the API is rate limited.
 - Icons for the mileage, charging rate, trunk, bonnet and the two polling interval entities (new
   `icons.json`).
 - The "API status" sensor has a new attribute `retry_at`: after a rate limit it shows when the request
