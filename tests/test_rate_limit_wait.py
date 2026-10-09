@@ -42,3 +42,16 @@ def test_poll_result_without_rate_limit_has_no_retry_at() -> None:
     from custom_components.skoda_connect.coordinator import _poll_result
 
     assert _poll_result(SkodaApiError("x", status=500)).retry_at is None
+
+
+def test_rate_limit_info_from_headers() -> None:
+    from custom_components.skoda_connect.api import _rate_limit_info
+
+    info = _rate_limit_info(
+        {"RateLimit-Limit": "20", "RateLimit-Remaining": "12", "RateLimit-Reset": "2700"}
+    )
+    assert info is not None
+    assert (info.limit, info.remaining) == (20, 12)
+    assert info.reset_at is not None
+    assert info.reset_at - info.updated == timedelta(seconds=2700)
+    assert _rate_limit_info({}) is None

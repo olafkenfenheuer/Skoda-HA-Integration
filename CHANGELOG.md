@@ -24,6 +24,8 @@ All notable changes to this integration are documented here. The format follows
 
 ### Added
 
+- Diagnostic sensor "API requests remaining" per vehicle: the requests left of the hourly quota according
+  to the last API response (attributes `limit`, `reset_at`, `updated`).
 - Button "Poll API now" per vehicle: queries the MyŠkoda API for the vehicle immediately. It costs one request of the API
   quota and is refused with a message while the API is rate limited.
 - Icons for the mileage, charging rate, trunk, bonnet and the two polling interval entities (new

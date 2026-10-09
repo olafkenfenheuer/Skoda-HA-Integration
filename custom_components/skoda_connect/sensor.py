@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .api import SkodaVehicle as Vehicle
+from .api import RateLimitInfo, SkodaVehicle as Vehicle
 from .coordinator import POLL_STATUSES, STATUS_RATE_LIMITED, PollResult, SkodaConfigEntry, SkodaDataUpdateCoordinator
 from .entity import SkodaVehicleEntity
 
@@ -199,6 +199,7 @@ async def async_setup_entry(
         entities.append(SkodaApiStatusSensor(coordinator, vin))
         entities.append(SkodaLastPollSensor(coordinator, vin))
         entities.append(SkodaRateLimitUntilSensor(coordinator, vin))
+        entities.append(SkodaApiRequestsRemainingSensor(coordinator, vin))
     async_add_entities(entities)
 
 
@@ -331,3 +332,44 @@ class SkodaRateLimitUntilSensor(SkodaVehicleEntity, SensorEntity):
         """Return when the quota is back, or None unless the last poll was rate limited."""
         result = self.coordinator.poll_results.get(self.vin)
         return result.retry_at if result and result.status == STATUS_RATE_LIMITED else None
+
+
+class SkodaApiRequestsRemainingSensor(SkodaVehicleEntity, SensorEntity):
+    """Shows how many requests of the hourly API quota are left (from the last response)."""
+
+    _attr_translation_key = "api_requests_remaining"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:gauge"
+
+    def __init__(self, coordinator: SkodaDataUpdateCoordinator, vin: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vin)
+        self._attr_unique_id = f"{vin}_api_requests_remaining"
+
+    @property
+    def available(self) -> bool:
+        """Stay available while polling fails, which is when the quota matters."""
+        return True
+
+    @property
+    def _info(self) -> RateLimitInfo | None:
+        return self.coordinator.api.rate_limits.get(self.vin)
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the remaining requests reported with the last response."""
+        info = self._info
+        return info.remaining if info else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the quota limit, when it resets and when the value was reported."""
+        if (info := self._info) is None:
+            return {}
+        attributes: dict[str, Any] = {"updated": info.updated}
+        if info.limit is not None:
+            attributes["limit"] = info.limit
+        if info.reset_at is not None:
+            attributes["reset_at"] = info.reset_at
+        return attributes

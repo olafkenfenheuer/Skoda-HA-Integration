@@ -26,6 +26,8 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Toegevoegd
 
+- Diagnostische sensor "Resterende API-verzoeken" per voertuig: de resterende verzoeken van het
+  uurquotum volgens het laatste API-antwoord (attributen `limit`, `reset_at`, `updated`).
 - Knop "API nu opvragen" per voertuig: vraagt de MyŠkoda-API direct op voor het voertuig. Kost één verzoek van het
   API-quotum en wordt met een melding geweigerd tijdens een rate limit.
 - Pictogrammen voor de kilometerstand, laadsnelheid, kofferbak, motorkap en de twee pollinginterval-entiteiten
