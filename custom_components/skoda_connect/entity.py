@@ -33,5 +33,10 @@ class SkodaVehicleEntity(CoordinatorEntity[SkodaDataUpdateCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return True if the coordinator succeeded and this vehicle is present."""
-        return super().available and self.vin in self.coordinator.data.vehicles
+        """Return True while there is data for this vehicle.
+
+        A failed poll (e.g. rate limit backoff) keeps the last known state instead of
+        turning every entity unavailable; the API status sensor shows the failure.
+        """
+        data = self.coordinator.data
+        return data is not None and self.vin in data.vehicles

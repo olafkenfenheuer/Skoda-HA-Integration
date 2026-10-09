@@ -5,6 +5,17 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.10]
+
+### Fixed
+
+- Requests now have a 30 second timeout, and timeouts or invalid responses are reported as a
+  connection/API error instead of an unhandled exception (commands showed a raw error).
+- During a rate limit backoff or other failed poll the entities keep their last known state instead
+  of becoming unavailable. The "API status" sensor shows the failure.
+- The air conditioning target temperature set in Home Assistant no longer overrides a value that was
+  changed elsewhere (e.g. in the MyŠkoda app).
+
 ## [0.3.9]
 
 ### Changed

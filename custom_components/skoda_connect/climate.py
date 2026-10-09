@@ -65,6 +65,16 @@ class SkodaClimate(SkodaVehicleEntity, ClimateEntity):
         self._attr_unique_id = f"{vin}_air_conditioning"
         # The API has no "set temperature" call: the target is sent when climate starts.
         self._requested_temperature: float | None = None
+        # Target temperature reported by the vehicle when the request was made; a different
+        # value later means it was changed elsewhere (e.g. in the app) and wins.
+        self._requested_from: float | None = None
+
+    def _handle_coordinator_update(self) -> None:
+        """Drop the requested temperature once the vehicle reports a different target."""
+        reported = self.vehicle.get("airConditioning", "targetTemperature", "value")
+        if self._requested_temperature is not None and reported != self._requested_from:
+            self._requested_temperature = None
+        super()._handle_coordinator_update()
 
     @property
     def _state(self) -> str | None:
@@ -108,6 +118,7 @@ class SkodaClimate(SkodaVehicleEntity, ClimateEntity):
                 self.vin,
                 self.coordinator.api.start_air_conditioning(self.vin, temperature)
             )
+        self._requested_from = self.vehicle.get("airConditioning", "targetTemperature", "value")
         self._requested_temperature = temperature
         self.async_write_ha_state()
 
