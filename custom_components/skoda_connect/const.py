@@ -23,12 +23,12 @@ KEY_PLUGGED_IN: Final = "plugged_in"
 # The public API allows 20 requests per hour and VIN (the limit is documented as not
 # final), and every command counts against the same quota. One poll costs a single
 # request per vehicle, so 10 minutes leaves roughly half of the quota for commands.
-# MIN_SCAN_INTERVAL_MINUTES is a hard floor so the options flow can't be set to a value
-# that all but guarantees rate limiting.
+# MIN_SCAN_INTERVAL_MINUTES is a hard floor (3 min = 20 requests/hour, i.e. the whole quota
+# without any room for commands) for the options flow and the polling interval numbers.
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 10
 # Polling interval while a vehicle is charging (state changes are what you want to see).
 DEFAULT_CHARGING_SCAN_INTERVAL_MINUTES: Final = 5
-MIN_SCAN_INTERVAL_MINUTES: Final = 5
+MIN_SCAN_INTERVAL_MINUTES: Final = 3
 MAX_SCAN_INTERVAL_MINUTES: Final = 1440
 # Upper end of the sliders of the per-vehicle polling interval number entities.
 POLL_INTERVAL_NUMBER_MAX_MINUTES: Final = 120

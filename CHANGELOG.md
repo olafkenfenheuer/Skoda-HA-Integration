@@ -5,6 +5,14 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.9]
+
+### Changed
+
+- The minimum of the polling interval and of the polling interval while charging is now 3 minutes
+  (was 5), for the options dialog and the per-vehicle `number` entities. Note that 3 minutes equal
+  20 requests/hour, the whole API quota, so commands may be rate limited at that setting.
+
 ## [0.3.8]
 
 ### Added

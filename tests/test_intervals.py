@@ -238,3 +238,25 @@ async def test_plugged_in_switch_overrides_global_option_per_vehicle(hass: HomeA
         assert c.plugged_in_fast_polling(VIN2)  # global option still applies
     finally:
         p.stop()
+
+
+async def test_poll_interval_numbers_allow_three_minutes(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry = _entry()
+    mock, p = await _setup(hass, entry, {VIN: False})
+    try:
+        reg = er.async_get(hass)
+        for kind in ("idle", "charging"):
+            entity_id = reg.async_get_entity_id("number", DOMAIN, f"{VIN}_poll_interval_{kind}")
+            assert hass.states.get(entity_id).attributes["min"] == 3
+            await hass.services.async_call(
+                "number", "set_value", {"entity_id": entity_id, "value": 3}, blocking=True
+            )
+            await hass.async_block_till_done()
+        c = entry.runtime_data
+        assert c.interval_minutes(VIN, "idle") == 3
+        assert c.interval_minutes(VIN, "charging") == 3
+        assert c.update_interval == timedelta(minutes=3)
+    finally:
+        p.stop()

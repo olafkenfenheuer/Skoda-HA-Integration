@@ -77,7 +77,7 @@ Ook deze documentatie is beschikbaar in het [Engels](README.md), het
 2. Ga naar **Instellingen → Apparaten & services → Integratie toevoegen** en zoek "Škoda Connect".
 3. Voer de API-sleutel en het VIN van elk voertuig in (meerdere VIN's gescheiden door komma's).
    De API heeft geen voertuiglijst, dus de VIN's moeten handmatig worden ingevoerd.
-4. Via **Configureren** wijzig je het pollinginterval (5-1440 minuten, standaard 10) of zet je
+4. Via **Configureren** wijzig je het pollinginterval (3-1440 minuten, standaard 10) of zet je
    de alleen-lezen-modus aan. Optioneel gebruik je het laadinterval ook zolang de laadkabel is aangesloten.
 
 Je kunt de API-sleutel (of de VIN's) op elk moment vervangen - vóór het verlopen of nadat je een nieuwe
@@ -115,7 +115,7 @@ en overschrijft voor dat voertuig de algemene optie.
 De API staat momenteel **20 verzoeken per uur per VIN** toe (niet definitief). Een poll kost
 één verzoek per voertuig, elk commando nog één. Daarom:
 
-- is het standaardinterval 10 minuten (minimaal 5) en 5 minuten tijdens het laden (of bij aangesloten kabel, als je die optie aanzet);
+- is het standaardinterval 10 minuten (minimaal 3; 3 minuten gebruiken al de hele limiet van 20 verzoeken per uur, zonder ruimte voor commando's) en 5 minuten tijdens het laden (of bij aangesloten kabel, als je die optie aanzet);
 - wordt na commando's slechts één keer ververst, 30 seconden na het laatste commando;
 - worden HTTP 429-antwoorden herkend en wordt het pollen gepauzeerd (`Retry-After`, minimaal
   15 minuten, maximaal 1 uur);

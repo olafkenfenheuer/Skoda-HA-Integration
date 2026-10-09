@@ -5,6 +5,14 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.9]
+
+### Gewijzigd
+
+- Het minimum van het pollinginterval en van het pollinginterval tijdens laden is nu 3 minuten (was 5),
+  voor het optiesvenster en de `number`-entiteiten per voertuig. Let op: 3 minuten komen overeen met
+  20 verzoeken per uur, de hele API-limiet, waardoor commando's dan geblokkeerd kunnen worden.
+
 ## [0.3.8]
 
 ### Toegevoegd

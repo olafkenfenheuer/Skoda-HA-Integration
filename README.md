@@ -86,7 +86,7 @@ This documentation itself is available in [English](README.md),
 4. Home Assistant validates the key and creates one device per vehicle with all applicable
    entities.
 5. After setup, open the integration's **Configure** dialog to change:
-   - the polling interval (5-1440 minutes, default 10),
+   - the polling interval (3-1440 minutes, default 10),
    - the shorter polling interval used **while charging** (default 5),
    - whether that charging interval is **also used while the cable is plugged in** (default off),
    - read-only mode.
@@ -133,7 +133,8 @@ The API currently allows **20 requests per hour per VIN** (documented as not fin
 costs one request per vehicle, and every remote command costs one more. Therefore this
 integration:
 
-- Defaults to a 10-minute polling interval (6 requests/hour) with a 5-minute minimum, and to 5 minutes
+- Defaults to a 10-minute polling interval (6 requests/hour) with a 3-minute minimum (3 minutes alone use the whole quota of 20 requests/hour, leaving no room for
+  commands), and to 5 minutes
   while a vehicle is charging, or plugged in if you enable that option (12 requests/hour - leave room
   for commands).
 - Does not refresh after every command; commands are accepted asynchronously (HTTP 202), so

@@ -88,7 +88,7 @@ Diese Dokumentation gibt es auf [Englisch](README.md), [Deutsch](README.de.md) u
    bietet keine Fahrzeugliste, daher müssen die VINs manuell eingegeben werden.
 4. Home Assistant prüft den Schlüssel und legt pro Fahrzeug ein Gerät mit allen passenden Entitäten an.
 5. Nach der Einrichtung kannst du im Dialog **Konfigurieren** einstellen:
-   - das Abfrageintervall (5–1440 Minuten, Standard 10),
+   - das Abfrageintervall (3–1440 Minuten, Standard 10),
    - das kürzere Intervall **während des Ladens** (Standard 5),
    - ob dieses Ladeintervall **auch bei eingestecktem Ladekabel** gilt (Standard aus),
    - den Nur-Lese-Modus.
