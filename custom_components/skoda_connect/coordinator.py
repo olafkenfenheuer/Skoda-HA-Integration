@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import Awaitable
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -15,11 +15,13 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import (
     SkodaApi,
     SkodaApiError,
     SkodaAuthError,
+    SkodaConnectionError,
     SkodaRateLimitError,
     SkodaVehicle,
 )
@@ -40,6 +42,58 @@ MIN_RATE_LIMIT_BACKOFF = timedelta(minutes=15)
 MAX_RATE_LIMIT_BACKOFF = timedelta(hours=1)
 # A vehicle counts as due slightly early so scheduler jitter never skips a whole tick.
 DUE_TOLERANCE_SECONDS = 10
+
+
+STATUS_OK = "ok"
+STATUS_PARTIAL = "partial"
+STATUS_AUTH_ERROR = "auth_error"
+STATUS_RATE_LIMITED = "rate_limited"
+STATUS_CONNECTION_ERROR = "connection_error"
+STATUS_API_ERROR = "api_error"
+POLL_STATUSES = [
+    STATUS_OK,
+    STATUS_PARTIAL,
+    STATUS_AUTH_ERROR,
+    STATUS_RATE_LIMITED,
+    STATUS_CONNECTION_ERROR,
+    STATUS_API_ERROR,
+]
+
+
+@dataclass
+class PollResult:
+    """Outcome of the most recent request that polled one vehicle."""
+
+    status: str
+    time: datetime
+    error: str | None = None
+    http_status: int | None = None
+    problem: str | None = None
+    # Parts of the vehicle the API reported as unavailable ("partial" results).
+    omitted: list[str] = field(default_factory=list)
+
+
+def _poll_result(result: SkodaVehicle | Exception) -> PollResult:
+    now = dt_util.utcnow()
+    if isinstance(result, SkodaVehicle):
+        return PollResult(
+            STATUS_PARTIAL if result.errors else STATUS_OK, now, omitted=list(result.errors)
+        )
+    if isinstance(result, SkodaAuthError):
+        status = STATUS_AUTH_ERROR
+    elif isinstance(result, SkodaRateLimitError):
+        status = STATUS_RATE_LIMITED
+    elif isinstance(result, SkodaConnectionError):
+        status = STATUS_CONNECTION_ERROR
+    else:
+        status = STATUS_API_ERROR
+    return PollResult(
+        status,
+        now,
+        error=str(result),
+        http_status=getattr(result, "status", None),
+        problem=getattr(result, "problem", None),
+    )
 
 
 @dataclass
@@ -73,6 +127,9 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         self._cancel_refresh: CALLBACK_TYPE | None = None
         self._last_fetch: dict[str, float] = {}
         self._force: set[str] = set()
+        # Result of the last poll per vehicle, and the last time a poll succeeded.
+        self.poll_results: dict[str, PollResult] = {}
+        self.last_success: dict[str, datetime] = {}
         self.update_interval = self._shortest_interval()
 
     # -- per-vehicle polling intervals -------------------------------------------------
@@ -160,6 +217,10 @@ class SkodaDataUpdateCoordinator(DataUpdateCoordinator[SkodaData]):
         )
         fetched = dict(zip(due, results, strict=True))
         self._force.clear()
+        for vin, result in fetched.items():
+            self.poll_results[vin] = poll = _poll_result(result)
+            if not isinstance(result, Exception):
+                self.last_success[vin] = poll.time
 
         vehicles: dict[str, SkodaVehicle] = {}
         failures: list[Exception] = []

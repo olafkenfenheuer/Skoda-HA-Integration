@@ -89,6 +89,17 @@
       },
       "charging_location_profile": {
         "name": "Charging location"
+      },
+      "api_status": {
+        "name": "API status",
+        "state": {
+          "ok": "OK",
+          "partial": "Partially available",
+          "auth_error": "API key rejected",
+          "rate_limited": "Rate limit reached",
+          "connection_error": "Connection error",
+          "api_error": "API error"
+        }
       }
     },
     "binary_sensor": {

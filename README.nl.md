@@ -15,7 +15,7 @@ externe client-bibliotheek.
 
 | Platform | Entiteiten |
 |---|---|
-| `sensor` | Accuniveau, laadvermogen, laadsnelheid, resterende laadtijd, accu-/totaalbereik, brandstofniveau, AdBlue-bereik, kilometerstand, doeltemperatuur, adres van de parkeerpositie, naam van het actieve laadlocatieprofiel |
+| `sensor` | Accuniveau, laadvermogen, laadsnelheid, resterende laadtijd, accu-/totaalbereik, brandstofniveau, AdBlue-bereik, kilometerstand, doeltemperatuur, adres van de parkeerpositie, naam van het actieve laadlocatieprofiel, API-status (resultaat van de laatste poll, diagnostisch) |
 | `binary_sensor` | Deuren, ramen, kofferbak, motorkap, verlichting, centrale vergrendeling, laden, laadkabel aangesloten, voertuig op opgeslagen laadlocatie |
 | `device_tracker` | Parkeerpositie (zichtbaar op de kaart; onbekend tijdens het rijden) |
 | `climate` | Airco op afstand (aan/uit, actieve ventilatie, doeltemperatuur) |
