@@ -21,6 +21,8 @@ Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De ind
 
 ### Toegevoegd
 
+- Pictogrammen voor de kilometerstand, laadsnelheid, kofferbak, motorkap en de twee pollinginterval-entiteiten
+  (nieuw `icons.json`).
 - De sensor "API-status" heeft een nieuw attribuut `retry_at`: na een rate limit toont het wanneer het
   quotum weer beschikbaar is.
 
