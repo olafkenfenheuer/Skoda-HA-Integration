@@ -5,12 +5,6 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.3.8]
-
-### Gewijzigd
-
-- De sensor "API-status" gebruikt nu het pictogram `mdi:car-connected`.
-
 ## [0.3.7]
 
 ### Gewijzigd
