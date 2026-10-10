@@ -60,6 +60,9 @@
       "charge_power": {
         "name": "Nabíjací výkon"
       },
+      "charge_limit": {
+        "name": "Limit nabitia"
+      },
       "charging_rate": {
         "name": "Rýchlosť nabíjania"
       },

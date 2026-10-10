@@ -60,6 +60,9 @@
       "charge_power": {
         "name": "Charging power"
       },
+      "charge_limit": {
+        "name": "Charge limit"
+      },
       "charging_rate": {
         "name": "Charging rate"
       },

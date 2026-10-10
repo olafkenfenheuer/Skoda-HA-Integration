@@ -99,6 +99,13 @@ SENSOR_DESCRIPTIONS: tuple[SkodaSensorEntityDescription, ...] = (
         exists_fn=_exists("charging", "status"),
     ),
     SkodaSensorEntityDescription(
+        key="charge_limit",
+        translation_key="charge_limit",
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=_path("charging", "settings", "targetStateOfChargeInPercent"),
+        exists_fn=_exists("charging", "settings", "targetStateOfChargeInPercent"),
+    ),
+    SkodaSensorEntityDescription(
         key="charging_rate",
         translation_key="charging_rate",
         state_class=SensorStateClass.MEASUREMENT,

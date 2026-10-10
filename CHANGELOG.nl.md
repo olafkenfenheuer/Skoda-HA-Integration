@@ -5,6 +5,12 @@
 Alle relevante wijzigingen aan deze integratie staan hier gedocumenteerd. De indeling volgt
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Toegevoegd
+
+- `sensor`: laadlimiet (doel-laadniveau), alleen lezen, naast de bestaande `number`-entiteit.
+
 ## [0.3.11]
 
 ### Opgelost
