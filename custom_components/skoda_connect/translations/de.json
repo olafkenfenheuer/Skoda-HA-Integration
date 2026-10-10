@@ -60,6 +60,9 @@
       "charge_power": {
         "name": "Ladeleistung"
       },
+      "charge_limit": {
+        "name": "Ladegrenze"
+      },
       "charging_rate": {
         "name": "Laderate"
       },

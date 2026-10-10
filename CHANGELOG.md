@@ -5,6 +5,12 @@
 All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `sensor`: charge limit (target state of charge), read-only, next to the existing `number` entity.
+
 ## [0.3.11]
 
 ### Fixed
